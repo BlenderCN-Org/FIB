@@ -1,0 +1,8 @@
+Root node processing (before b&c):
+  Real time             =   10.91 sec. (3332.17 ticks)
+Parallel b&c, 4 threads:
+  Real time             =   25.91 sec. (7364.23 ticks)
+  Sync time (average)   =    3.29 sec.
+  Wait time (average)   =    0.00 sec.
+                          ------------
+Total (root+branch&cut) =   36.81 sec. (10696.41 ticks)

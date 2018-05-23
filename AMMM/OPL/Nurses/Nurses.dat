@@ -1,0 +1,54 @@
+/*********************************************
+ * OPL 12.8.0.0 Data
+ * Author: Emy
+ * Creation Date: 1 janv. 2018 at 17:04:17
+ *********************************************/
+
+//data tests
+// numNurses = 30;
+// hours =  24;
+// //demand = [ 2 2 1 1 1 2 2 3 4 6 6 7 5 8 8 7 6 6 4 3 4 3 3 3 ];
+// demand = [ 2 2 1 1 1 2 2 3 4 6 6 7 5 8 8 7 6 6 4 3 4 3 3 3 ];
+// minHours = 5;
+// maxHours = 9;
+// maxConsec = 3;
+// maxPresence = 18;
+
+
+//data 1: 20 nurses
+ numNurses = 20;
+ hours =  24;
+ demand = [ 2 2 1 1 1 2 2 3 4 6 6 7 5 8 8 7 6 6 4 3 4 3 3 3 ];
+ minHours = 5;
+ maxHours = 9;
+ maxConsec = 3;
+ maxPresence = 14;
+ 
+ 
+ //data 2: 600 nurses
+// numNurses = 600;
+// hours =  24;
+// demand = [ 50 34 12 21 2 103 35 58 22 6 150 88 70 18 7 69 30 100 50 3 56 32 9 18 ];
+// minHours = 9;
+// maxHours = 12;
+// maxConsec = 7;
+// maxPresence = 16;
+
+ //data 3: 1000 nurses
+// numNurses = 1000;
+// hours =  24;
+// demand = [ 300 500 40 55 120 80 90 54 30 6 76 99 230 18 57 33 30 324 45 3 222 87 18 9 ];
+// minHours = 10;
+// maxHours = 12;
+// maxConsec = 7;
+// maxPresence = 16;
+
+
+ //data 4: 1000 nureses but less time of working
+// numNurses = 1000;
+// hours =  24;
+// demand = [ 300 500 40 55 120 80 90 54 30 6 76 99 230 18 57 33 30 324 45 3 222 87 18 9 ];
+// minHours = 6;
+// maxHours = 10;
+// maxConsec = 5;
+// maxPresence = 15;
