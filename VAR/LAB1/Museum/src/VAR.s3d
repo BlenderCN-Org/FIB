@@ -1,0 +1,640 @@
+#define _S3D_ALLOW_OBSOLETE_FUNCTIONS
+
+// Global scene parameters
+
+SET SCENE_FOV = 60;
+SET SCENE_NEAR = 0.5;
+SET SCENE_FAR = 1000;
+
+
+// Needed includes 
+#include <Script3d.h>
+#include <GLConst.h>
+#include <Impulse.h>
+#include <VirtualKey.h>
+
+// Global variables
+
+
+var CamPos = [-150.0,50.0,0.0];   // camera position
+
+
+//Lights
+var Luce1, Luce2,Luce3;  
+
+var LightTarget = [20.0,-20.0,12.0];  	
+
+var light_on1=false;  
+var light_on2=false;
+var light_on3=true;
+
+var selected_color=0;
+
+
+var m_column, o_column;
+var m_aphrodite, o_aphrodite;
+var m_classic, o_classic;
+var m_cupid, o_cupid;
+var m_fireplace, o_fireplace;
+var m_temple, o_temple;
+var m_axe, o_axe;
+var m_helmet, o_helmet;
+
+var trigger_axis = false;
+
+var pos_column    = [100.0,0.0,0.0];	
+var pos_aphrodite    = [0.0,0.0,0.0];	
+var pos_classic = [0.0,0.0,10.0];
+var pos_cupid = [0.0,0.0,-5.0];
+var pos_fireplace = [5.0,0.0,0.0];
+var pos_temple = [10.0,0.0,0.0];
+var pos_axe = [10.0,0.0,5.0];
+var pos_helmet = [20.0,0.0,-5.0];
+
+
+var mod_color   = [1.0,1.0,1.0,1.0];
+
+
+// Manage items selection
+var a_items = Array(0);
+var a_items_obj = Array(0);
+var a_items_names = Array(0);
+var current_item = 0;
+var size_items = 0;
+var b_show = false;
+
+// Manage items movments
+var selected_axis = 0; // X = 0, Y = 1, Z = 2
+
+
+
+// Function declarations
+function CameraMoveMouse();
+function DrawGrid();
+function DrawQuad(size);
+function DrawTextLayer();
+function ResizeMesh(name,mesh,x,y,s);
+function ShowCurrentItem(show);
+function KeyStatus(keycode);
+function KeyBoardManager();
+
+
+
+//---------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------
+
+
+function OnDownload()
+{
+	FileDownload("aam_models.zip");	
+}
+
+
+//Function ResizeMesh : add the items to the the items list (used for the selection),resize the mesh so that every mesh has the same scale, create the object associated to the mesh, place the object above the grid 
+ 
+function ResizeMesh(name,mesh,x,y,s)
+{
+	aadd(a_items, mesh);
+	aadd(a_items_names, name);
+	size_items += 1;
+	
+	var sizex = mesh.GetBoundingBox();
+	mesh.Scale(s/(sizex[3]-sizex[0]));
+	mesh.CenterBoundingBox();
+	
+	var obj=CVmObj(mesh);
+	
+	aadd(a_items_obj, obj);
+	
+	var sizey =mesh.GetBoundingBox();
+	obj.SetPosition([x,(sizey[4]-sizey[1])/2,y]);
+	return(obj);
+}
+
+
+
+function OnInit(params)
+{	
+	
+	//Change text color
+	ConsoleColor(0.89,0.0,0.13,1.0);
+	
+	// Camera
+	CameraGetCurrent().SetPosition(CamPos);
+	CameraGetCurrent().SetRotation(90,[0.0,1.0,0.0]);  //Place the camera in front of the objects
+
+
+	// Light 1 : Torchlight
+	Luce1 = CVmLight();
+	Luce1.SetDiffuse(1.0,1.0,1.0);
+	Luce1.SetAmbient(1.0,1.0,1.0);
+	Luce1.SetSpecular(0.5,0.5,0.5);
+	Luce1.SetPosition(CamPos);
+	Luce1.SetDirection(LightTarget);
+	Luce1.SetParameter(GL_SPOT_EXPONENT,100);
+	Luce1.SetParameter(GL_SPOT_CUTOFF,60);
+	Luce1.Disable();  //disabled at launch
+	
+	//Light 2 : Color Light
+	Luce2 = CVmLight();
+	Luce2.SetDiffuse(0.8,0.8,0.8);
+	Luce2.SetAmbient(0.5,1.0,1.0);
+	Luce2.SetSpecular(0.1,0.1,0.1);
+	Luce2.SetPosition(CamPos);
+	Luce2.SetSpotDirection(LightTarget);
+	Luce2.Disable;   //disabled at launch
+	
+	//Light 3 : Overall light 
+	Luce3 = CVmLight();
+	Luce3.SetDiffuse(0.8,0.8,0.8);
+	Luce3.SetAmbient(1.0,1.0,1.0);
+	Luce3.SetSpecular(0.1,0.1,0.1);
+	Luce3.SetPosition(CamPos);
+	Luce3.SetSpotDirection(LightTarget);
+	Luce3.Enable();		//enabled at launch
+
+
+
+	//TO DO
+	m_column = CVMNewMesh("12columnModel.aam");
+	o_column = ResizeMesh("column",m_column,20.0,-50.0,10);
+	
+
+	m_aphrodite  = CVMNewMesh("aphrodite_statue.aam");
+	o_aphrodite  = ResizeMesh("aphrodite",m_aphrodite,20.0,-20.0,12);
+
+	
+	m_cupid  = CVMNewMesh("cupid_statue.aam");
+	o_cupid  = ResizeMesh("cupid",m_cupid,20.0,20.0,10);
+	
+	m_classic  = CVMNewMesh("classic_column.aam");
+	o_classic  = ResizeMesh("classic",m_classic,20.0,-50.0,10);
+	o_classic.SetPosition([20.0,(m_column.GetBoundingBox())[4]*2+(m_classic.GetBoundingBox())[4],-50.0]);
+	
+	
+	m_fireplace  = CVMNewMesh("fireplace.aam");
+	m_fireplace.ForceMaterial("texture.jpg");
+	o_fireplace  = ResizeMesh("fireplace",m_fireplace,100.0,0.0,15);
+	m_fireplace.Rotate(-90,[0.0,1.0,0.0]);
+	o_fireplace.SetPosition([120.0,15.0,0.0]);
+	
+	
+	m_temple  = CVMNewMesh("ionic_temple.aam");
+	m_temple.Scale(3.0, 6.0, 8.0);
+	o_temple  = ResizeMesh("temple",m_temple,100.0,0.0,100.0);
+	
+	
+	m_axe  = CVMNewMesh("roman_axe.aam");
+	o_axe  = ResizeMesh("roman_axe",m_axe,100.0,0.0,10);
+	o_axe.SetPosition([100.0,20.0,10.0]);
+	
+	m_helmet  = CVMNewMesh("romanHelmet.aam");
+	o_helmet  = ResizeMesh("helmet",m_helmet,100.0,0.0,5);
+	m_helmet.Rotate(90,[0.0,1.0,0.0]);
+	o_helmet.SetPosition([100.0,15.0,-10.0]);
+		
+	glEnable(GL_NORMALIZE);	
+
+	glEnable(GL_BLEND);	 //For transparency
+
+}
+
+
+
+
+function OnFrame()
+{
+	KeyboardManager();						
+	
+	showCurrentItem(b_show);
+	
+	// Camera manager
+	CameraMoveMouse();						
+	Luce1.SetPosition(CameraGetPosition());	
+	
+
+	
+	SceneBegin();	
+	
+	LoadBackground("garden.jpg",VR_NO_FILTER);	//Add a background image
+		
+		for (var i=0; i<size_items; i++)
+		{
+			a_items_obj[i].Draw();  //we draw all the items
+		}
+		
+	
+		// Draws grid
+		//DrawGrid();  //We don't display the grid with the background image
+
+		
+	SceneEnd();
+	
+	DrawTextLayer();
+}
+
+
+//-------------------------------------------------------------
+// Gestione di Tastiera, Mouse etc.
+//-------------------------------------------------------------
+
+function KeyboardManager()
+{
+	if (KeyStatus("N"))
+	{
+		showCurrentItem(false);
+		current_item += 1;
+	}
+		
+	if (KeyStatus("P"))
+	{
+		showCurrentItem(false);
+		current_item -= 1;
+	}
+		
+	if (KeyStatus("S"))
+	{
+		b_show = !b_show;
+	}
+
+
+		
+	if (current_item >= size_items)
+		current_item = 0;
+	if (current_item < 0)
+		current_item = size_items - 1;
+		
+	if (KeyStatus("X"))
+ 	{
+  		selected_axis = 0;
+  	}
+  	if (KeyStatus("Y"))
+  	{
+  	selected_axis = 1;
+ 	}
+ 	if (KeyStatus("Z"))
+ 	{
+ 		selected_axis = 2;
+ 	}
+
+ 	
+ 	if (KeyPressed(VK_UP))
+ 	{
+ 		switch(selected_axis)
+ 		{
+ 			case 0:
+ 				a_items[current_item].Translate(1, 0, 0);
+ 			break;
+ 			case 1:
+ 				a_items[current_item].Translate(0, 1, 0);
+ 			break;
+ 			case 2:
+ 				a_items[current_item].Translate(0, 0, 1);
+ 			break;
+ 			default:
+ 			break;
+ 		}
+ 	}
+ 	if (KeyPressed(VK_DOWN))
+ 	{
+ 		switch(selected_axis)
+ 		{
+ 			case 0:
+ 				a_items[current_item].Translate(-1, 0, 0);
+ 			break;
+ 			case 1:
+ 				a_items[current_item].Translate(0, -1, 0);
+ 			break;
+ 			case 2:
+ 				a_items[current_item].Translate(0, 0, -1);
+ 			break;
+ 			default:
+ 			break;
+ 		}
+ 	}
+ 	
+ 	if (KeyPressed(VK_LEFT))
+ 	{
+ 		switch(selected_axis)
+ 		{
+ 			case 0:
+ 				a_items[current_item].Rotate(1, 1, 0, 0);
+ 			break;
+ 			case 1:
+ 				a_items[current_item].Rotate(1, 0, 1, 0);
+ 			break;
+ 			case 2:
+ 				a_items[current_item].Rotate(1, 0, 0, 1);
+ 			break;
+ 			default:
+ 			break;
+ 		}
+ 	}
+ 	if (KeyPressed(VK_RIGHT))
+ 	{
+ 		switch(selected_axis)
+ 		{
+ 			case 0:
+ 				a_items[current_item].Rotate(-1, 1, 0, 0);
+ 			break;
+ 			case 1:
+ 				a_items[current_item].Rotate(-1, 0, 1, 0);
+ 			break;
+ 			case 2:
+ 				a_items[current_item].Rotate(-1, 0, 0, 1);
+ 			break;
+ 			default:
+ 			break;
+ 		}
+ 	}
+ 	
+ 	if (KeyPressed("Q"))
+ 	{
+ 		a_items[current_item].Scale(1.02);
+ 	}
+ 	if (KeyPressed("A"))
+ 	{
+ 		a_items[current_item].Scale(0.98);
+ 	}
+
+	if (KeyStatus("T"))
+ 	{
+ 		light_on1 = !light_on1;
+ 		
+ 		if (light_on1)
+ 			Luce1.Enable();
+ 		else
+ 			Luce1.Disable();
+ 	}
+ 	
+ 	
+ 	
+ 	if (KeyStatus("C"))
+ 	{
+ 		light_on2 = !light_on2;
+ 		
+ 		
+ 		if (light_on2){
+ 			Luce2.Enable();
+ 			if (light_on3){
+ 				Luce3.Disable();
+ 			}
+ 			}
+ 		else{
+ 			Luce2.Disable();
+ 			if (light_on3){
+ 				Luce3.Enable();
+ 				}
+ 		}
+ 			
+ 	}
+ 	
+ 	if (KeyStatus("O"))
+ 	{
+ 		light_on3 = !light_on3;
+ 		
+ 		if (light_on3)
+ 			Luce3.Enable();
+ 		else
+ 			Luce3.Disable();
+ 	}
+ 	
+ 	if (KeyStatus("1"))
+ 	{
+  		Luce2.SetAmbient(0.5,1.0,1.0); //blue
+  	}
+  	if (KeyStatus("2"))
+  	{
+  		Luce2.SetAmbient(1.0,5.0,1.0); //green
+ 	}
+ 	if (KeyStatus("3"))
+ 	{
+ 		Luce2.SetAmbient(1.0,1.0,5.0); //purple
+ 	}
+ 	if (KeyStatus("4"))
+ 	{
+ 		Luce2.SetAmbient(0.89,0.0,0.13); //red
+ 	}
+
+ 	
+ 	
+
+ 	
+
+}
+
+function ShowCurrentItem(show)
+{
+	if (show)
+	{
+		a_items_obj[current_item].ModulateMaterials(1.0, 100.0, 1.0);
+	}
+	else
+	{
+		a_items_obj[current_item].ModulateMaterials(1.0, 1.0, 1.0);
+	}
+}
+
+
+function DownloadReady( RequestID )
+{
+}
+
+
+
+function OnTimer()
+{
+}
+
+
+
+function OnExit()
+{
+}
+
+
+function DrawQuad(size)
+{
+	
+}
+
+
+function CameraMoveMouse_MBL_LC(cam, trasl_sensitivity, rot_sensitivity)
+{
+	if (cam == VOID)
+		cam = CameraGetCurrent();
+	if (trasl_sensitivity == VOID)
+		trasl_sensitivity = 0.01;
+	if (rot_sensitivity == VOID)
+		rot_sensitivity = 0.01;
+	
+		
+	/* TODO: these variables should be relative to the current camera */
+	static var InMouseR = false, InMouseL = false;				
+	static var PrecX = 0, PrecY = 0;
+
+	if (Mouse.ButtonL && !Mouse.ButtonR)
+	{
+		/* left button: camera rotation */
+		if (InMouseL)
+		{			
+			cam.RotateGlobal((Mouse.X - PrecX) * rot_sensitivity, 0, 1, 0);
+			cam.RotateLocal((Mouse.Y - PrecY) * rot_sensitivity, 1, 0, 0);		
+		}
+		else
+		{
+			PrecX = Mouse.X;
+			PrecY = Mouse.Y;
+		}
+		InMouseL = true;
+		InMouseR = false;
+	}
+	else if (Mouse.ButtonR)
+	{
+		/* right button: camera translation */
+		if (InMouseR)
+		{
+			if (Mouse.ButtonL)
+			{
+				var y_trasl = -cam.GetYAxis() * (Mouse.Y - PrecY); 
+				cam.SetPosition(cam.GetPosition() + y_trasl * trasl_sensitivity);
+			}
+			else
+			{
+				var x_trasl = cam.GetXAxis() * (Mouse.X - PrecX);
+				var z_trasl = cam.GetZAxis() * (Mouse.Y - PrecY);
+				cam.SetPosition(cam.GetPosition() + (z_trasl + x_trasl) * trasl_sensitivity);
+			}
+		}
+		else
+		{
+			PrecX = Mouse.X;
+			PrecY = Mouse.Y;
+		}
+		InMouseR = true;
+		InMouseL = false;
+	}	
+	else
+	{
+		InMouseR = false;
+		InMouseL = false;
+	}
+}
+
+function CameraMoveMouse()
+//----------------------------------------------------------------------
+{
+	CameraMoveMouse_MBL_LC();
+}
+
+
+// Draws a grid
+function DrawGrid()
+{
+	var i;
+	glLineWidth(1);
+	
+	glDisable(GL_LIGHTING);
+	glDisable(GL_TEXTURE_2D);
+	glColor(0.5,0.5,0.5);
+	
+	glBegin(GL_LINES);
+	for( i= -200; i<=200; i+=10 )
+	{
+		glVertex(i, 0,  200 );
+		glVertex(i, 0, -200 );
+		
+		glVertex( 200, 0, i );
+		glVertex(-200, 0, i );
+	}
+	glEnd();
+	glEnable(GL_LIGHTING);
+	glEnable(GL_TEXTURE_2D);
+}
+
+
+
+
+//----------------------------------------------------------------------
+function KeyStatus(keycode)
+//----------------------------------------------------------------------
+{
+	if (valtype(keycode) == "S")
+	{
+		keycode = asc(keycode);
+	}
+		
+	static var keys_stati = vector(255);
+	if (KeyPressed(keycode))
+	{	
+		if (keys_stati[keycode] == 0.0)
+		{
+			keys_stati[keycode] = 1.0;
+			return true;
+		}
+	}
+	else
+	{
+		keys_stati[keycode] = 0.0;
+		return false;
+	}
+	return false;		
+}
+
+//----------------------------------------------------------------------
+function DrawTextLayer()
+//----------------------------------------------------------------------
+{
+	var text = "Selected item : " + a_items_names[current_item];
+	ConsoleText(0.01,0.98,text);
+	text = "Show selected item : ";
+	if (b_show) {
+		text += "enable";
+	} else {
+		text += "disable";
+	}
+	ConsoleText(0.01,0.955,text);
+	
+	text = "Selected axis : ";
+ 	if (selected_axis == 0) {
+ 		text += "X-axis";
+ 	} else if (selected_axis == 1) {
+ 		text += "Y-axis";
+ 	} else {
+ 		text += "Z-axis";
+ 	}
+ 	ConsoleText(0.01,0.93,text);
+	
+	ConsoleText(0.65,0.98, "Item selection :");
+	ConsoleText(0.65,0.955, "   N : next item");
+	ConsoleText(0.65,0.93,  "   P : previous item");
+	ConsoleText(0.65,0.905, "   S : enable/disable texture on selected item");
+	
+	
+	ConsoleText(0.65,0.88, "Axis selection :");
+ 	ConsoleText(0.65,0.855, "   X : X-axis");
+	ConsoleText(0.65,0.83,  "   Y : Y-axis");
+ 	ConsoleText(0.65,0.805, "   Z : Z-axis");
+ 	
+ 	ConsoleText(0.65,0.78, "Translate current item along selected axis :");
+ 	ConsoleText(0.65,0.755, "   UP     : increase value");
+ 	ConsoleText(0.65,0.73,  "   DWN : decrease value");
+ 	
+ 	ConsoleText(0.65,0.705, "Rotate current item along selected axis :");
+ 	ConsoleText(0.65,0.68,  "   LFT   : rotate clockwise");
+ 	ConsoleText(0.65,0.655, "   RGT : rotate counter clockwise");
+ 	
+ 	ConsoleText(0.65,0.63, "Scale current item :");
+ 	ConsoleText(0.65,0.605, "   Q : increase size");
+ 	ConsoleText(0.65,0.58,  "   A : decrease size");
+ 	
+ 	ConsoleText(0.65,0.555, "Light Selection :");
+ 	ConsoleText(0.65,0.53, "   T : enable/disable Torchlight");
+	ConsoleText(0.65,0.505,  "   C : enable/disable Color light");
+	ConsoleText(0.65,0.48, "      1 / 2 / 3 / 4 : Change colors when color light is enabled");
+ 	ConsoleText(0.65,0.455, "   O : enable/disable Overall light");
+ 	
+
+
+
+}
