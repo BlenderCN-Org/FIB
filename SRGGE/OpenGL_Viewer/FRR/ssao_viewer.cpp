@@ -22,14 +22,14 @@ void ssao_viewer::initializeGL()
     // initialize GL function resolution for current context
     initializeGLFunctions();
 
-    gShader = new Shader(QString("/Users/Emy/GitHub/OpenGL_Viewer/shaders/ssao_geom.vert"), QString("/Users/Emy/GitHub/OpenGL_Viewer/shaders/ssao_geom.frag"));
+    gShader = new Shader(QString("/Users/Emy/GitHub/FIB/SRGGE/OpenGL_Viewer/shaders/ssao_geom.vert"), QString("/Users/Emy/GitHub/FIB/SRGGE/OpenGL_Viewer/shaders/ssao_geom.frag"));
     gShader->m_program.bindAttributeLocation("vert", ATTRIB_VERTEX);
     gShader->m_program.bindAttributeLocation("normal" , ATTRIB_NORMAL);
 
-    ssaoShader = new Shader(QString("/Users/Emy/GitHub/OpenGL_Viewer/shaders/ssao.vert"), QString("/Users/Emy/GitHub/OpenGL_Viewer/shaders/ssao.frag"));
+    ssaoShader = new Shader(QString("/Users/Emy/GitHub/FIB/SRGGE/OpenGL_Viewer/shaders/ssao.vert"), QString("/Users/Emy/GitHub/FIB/SRGGE/OpenGL_Viewer/shaders/ssao.frag"));
     ssaoShader->m_program.bindAttributeLocation("vert" , 0);
 
-    blurShader = new Shader(QString("/Users/Emy/GitHub/OpenGL_Viewer/shaders/blur.vert"), QString("/Users/Emy/GitHub/OpenGL_Viewer/shaders/blur.frag"));
+    blurShader = new Shader(QString("/Users/Emy/GitHub/FIB/SRGGE/OpenGL_Viewer/shaders/blur.vert"), QString("/Users/Emy/GitHub/FIB/SRGGE/OpenGL_Viewer/shaders/blur.frag"));
     blurShader->m_program.bindAttributeLocation("vert" , 0);
     blurShader->m_program.bindAttributeLocation("texCoords" , 1);
 

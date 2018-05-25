@@ -22,11 +22,11 @@ void separable::initializeGL()
     // initialize GL function resolution for current context
     initializeGLFunctions();
 
-    gShader = new Shader(QString("/Users/Emy/GitHub/OpenGL_Viewer/shaders/ssao_geom.vert"), QString("/Users/Emy/GitHub/OpenGL_Viewer/shaders/ssao_geom.frag"));
+    gShader = new Shader(QString("/Users/Emy/GitHub/FIB/SRGGE/OpenGL_Viewer/shaders/ssao_geom.vert"), QString("/Users/Emy/GitHub/FIB/SRGGE/OpenGL_Viewer/shaders/ssao_geom.frag"));
     gShader->m_program.bindAttributeLocation("vert", ATTRIB_VERTEX);
     gShader->m_program.bindAttributeLocation("normal" , ATTRIB_NORMAL);
 
-    ssaoShader = new Shader(QString("/Users/Emy/GitHub/OpenGL_Viewer/shaders/separable.vert"), QString("/Users/Emy/GitHub/OpenGL_Viewer/shaders/separable.frag"));
+    ssaoShader = new Shader(QString("/Users/Emy/GitHub/FIB/SRGGE/OpenGL_Viewer/shaders/separable.vert"), QString("/Users/Emy/GitHub/FIB/SRGGE/OpenGL_Viewer/shaders/separable.frag"));
     ssaoShader->m_program.bindAttributeLocation("vert" , 0);
     ssaoShader->m_program.bindAttributeLocation("texCoords" , 1);
 

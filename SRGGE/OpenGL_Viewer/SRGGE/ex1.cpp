@@ -5,7 +5,7 @@
 #include </usr/local/include/glm/gtc/type_ptr.hpp>
 #include "time.h"
 
-int final_time3, initial_time3=time(NULL), frames3=0;
+//int final_time3, initial_time3=time(NULL), frames3=0;
 
 
 ex1::ex1(const QGLFormat &glf, QWidget *parent) : Viewer1(glf, parent)
@@ -22,7 +22,7 @@ void ex1::initializeGL()
     // initialize GL function resolution for current context
     initializeGLFunctions();
 
-    gShader = new Shader(QString("/Users/Emy/Documents/Cours/SRGGE/LAB/SRGGE/shaders/try.vert"), QString("/Users/Emy/Documents/Cours/SRGGE/LAB/SRGGE/shaders/try.frag"));
+    gShader = new Shader(QString("/Users/Emy/GitHub/FIB/SRGGE/OpenGL_Viewer/shaders/try.vert"), QString("/Users/Emy/GitHub/FIB/SRGGE/OpenGL_Viewer/shaders/try.frag"));
     gShader->m_program.bindAttributeLocation("vert", ATTRIB_VERTEX);
     gShader->m_program.bindAttributeLocation("normal" , ATTRIB_NORMAL);
 
@@ -123,13 +123,13 @@ void ex1::paintGL()
 
     //Set Framerate
 
-    frames3++;
-    final_time3=time(NULL);
-    if(final_time3-initial_time3>0)
+    frames++;
+    final_time=time(NULL);
+    if(final_time-initial_time>0)
     {
-        emit SetFramerate(QString::number(frames3/(final_time3-initial_time3)));
-        frames3=0;
-        initial_time3=final_time3;
+        emit SetFramerate(QString::number(frames/(final_time-initial_time)));
+        frames=0;
+        initial_time=final_time;
     }
 
 
@@ -144,7 +144,6 @@ void ex1::paintGL()
 void ex1::initVertexBuffer()
 {
 
-    t_Timer.start();
 
     glBindVertexArray(vao);
     if (mesh_ == nullptr) return;

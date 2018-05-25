@@ -21,8 +21,8 @@ class ex1 : public Viewer1
 
 public:
     ex1		(const QGLFormat &glf, QWidget *parent = 0);
-    void		initVertexBuffer();		// init vertices
-    QGroupBox*  controlPanel();
+    void            initVertexBuffer();		// init vertices
+    QGroupBox*      controlPanel();
 
     GLuint          depthrenderbuffer;
     int             copies=1;
@@ -35,6 +35,7 @@ public:
 
     QLabel          *print_fps;
 
+    int final_time, initial_time=time(NULL), frames=0;
 
 
 protected:

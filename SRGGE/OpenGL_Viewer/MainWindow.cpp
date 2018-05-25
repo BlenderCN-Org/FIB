@@ -5,6 +5,7 @@
 #include "FRR/separable.h"
 #include "SRGGE/ex1.h"
 #include "SRGGE/ex2.h"
+#include "SRGGE/ex4.h"
 
 QString frameStyle   = "QFrame#frame {				\
 			border: 2px solid gray;			\
@@ -80,7 +81,8 @@ MainWindow::createWidgets()
         << "SSAO"
         << "Separable Version"
         << "Exercise 1"
-        << "Exercise 2";
+        << "Exercise 2"
+        << "Exercise 3";
 
 	// format for legacy OpenGL with older GLSL (supporting attribute/varying qualifiers)
 	QGLFormat glfLegacy = QGLFormat::defaultFormat();	// base format
@@ -104,6 +106,8 @@ MainWindow::createWidgets()
     m_hw[m_hwName[FRR2 ]] = new separable(glfModern);
     m_hw[m_hwName[SRGGE1 ]] = new ex1(glfModern);
     m_hw[m_hwName[SRGGE2 ]] = new ex2(glfModern);
+    m_hw[m_hwName[SRGGE3 ]] = new ex4(glfModern);
+
 
 	// add control panels to stacked widget
 	for(int i = 0; i < (int) m_hwName.size(); ++i)
@@ -132,6 +136,9 @@ MainWindow::createActions()
     m_actionSRGGE2 = new QAction(m_hwName[SRGGE2], this);
     m_actionSRGGE2->setData(SRGGE2);
 
+    m_actionSRGGE3 = new QAction(m_hwName[SRGGE3], this);
+    m_actionSRGGE3->setData(SRGGE3);
+
 	connect(menuBar(), SIGNAL(triggered(QAction*)), this, SLOT(changeHW(QAction*)));
 }
 
@@ -145,6 +152,7 @@ MainWindow::createMenus()
     m_menuSRGGE = menuBar()->addMenu("SRGGE");
     m_menuSRGGE->addAction(m_actionSRGGE1);
     m_menuSRGGE->addAction(m_actionSRGGE2);
+    m_menuSRGGE->addAction(m_actionSRGGE3);
 
 }
 

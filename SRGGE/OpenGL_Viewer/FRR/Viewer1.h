@@ -28,11 +28,7 @@ public:
 
     MI              mesh_importer;
     GLuint          vao, vboVertex, vboNormal, vboIndex;
-    //GLuint          gBuffer,gTexture;
-    //gPosition, gNormal, gAlbedoSpec,
-//    GLuint          depthrenderbuffer;
     GLuint          quadVAO, quadVBO=0, quadTextCoordVBO, quadID;
-//    GLuint          noiseTexture, ssaoFBO, ssaoBlurFBO, ssaoColorBuffer, ssaoColorBufferBlur;
     QElapsedTimer   t_Timer;
     double          lastTime;
     int             nbFrames=0;

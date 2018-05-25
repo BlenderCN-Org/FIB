@@ -7,9 +7,6 @@
 #include "time.h"
 #include <cmath>
 
-int final_time4, initial_time4=time(NULL), frames4=0;
-
-
 
 namespace data_representation {
 
@@ -100,29 +97,6 @@ ex2::ex2(const QGLFormat &glf, QWidget *parent) : ex1(glf, parent)
 }
 
 
-void ex2::initializeGL()
-{
-
-    // initialize GL function resolution for current context
-    initializeGLFunctions();
-
-    gShader = new Shader(QString("/Users/Emy/Documents/Cours/SRGGE/LAB/SRGGE/shaders/try.vert"), QString("/Users/Emy/Documents/Cours/SRGGE/LAB/SRGGE/shaders/try.frag"));
-    gShader->m_program.bindAttributeLocation("vert", ATTRIB_VERTEX);
-    gShader->m_program.bindAttributeLocation("normal" , ATTRIB_NORMAL);
-
-    glGenVertexArrays(1, &vao);
-    glBindVertexArray(vao);
-
-    glEnable(GL_NORMALIZE);
-    glEnable(GL_CULL_FACE);
-    glCullFace(GL_BACK);
-    glEnable(GL_DEPTH_TEST);
-
-    // init state variables
-    glClearColor(1.0, 1.0, 1.0, 1.0);	// set background color
-    glColor3f   (1.0, 1.0, 0.0);		// set foreground color
-
-}
 
 
 
@@ -178,7 +152,7 @@ void ex2::paintGL()
                 glBindVertexArray(vao);
                 glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,vboIndex);
 
-                if(LODsimpleON)
+                if(LODsimpleON||QuadricON)
                 {
                     glDrawElements(GL_TRIANGLES,new_faces.size(),GL_UNSIGNED_INT,0);
                 }
@@ -207,13 +181,13 @@ void ex2::paintGL()
 
     //Set Framerate
 
-    frames4++;
-    final_time4=time(NULL);
-    if(final_time4-initial_time4>0)
+    frames++;
+    final_time=time(NULL);
+    if(final_time-initial_time>0)
     {
-        emit SetFramerate(QString::number(frames4/(final_time4-initial_time4)));
-        frames4=0;
-        initial_time4=final_time4;
+        emit SetFramerate(QString::number(frames/(final_time-initial_time)));
+        frames=0;
+        initial_time=final_time;
     }
 
 
@@ -241,7 +215,7 @@ int ex2::cellid(int v,int l){
 
 
 
-void ex2::computeGrid(){
+void ex2::computeGrid(int level){
 
 
     new_vertices.clear();
@@ -491,6 +465,12 @@ void ex2::computeQuadric(){
 
 
 
+
+
+
+
+
+
 void ex2::initVertexBuffer()
 {
 
@@ -515,7 +495,7 @@ void ex2::initVertexBuffer()
     if(LODsimpleON||QuadricON){
 
         if(LODsimpleON)
-            computeGrid();
+            computeGrid(level);
         else{
             computeQuadric();
         }
@@ -564,12 +544,7 @@ void ex2::initVertexBuffer()
 
     }
 
-
-
-
     glBindVertexArray(0);
-
-
 
 
 }

@@ -43,7 +43,8 @@ HEADERS +=	MainWindow.h		\
     FRR/ssao_viewer.h \
     FRR/separable.h \
     SRGGE/ex1.h \
-    SRGGE/ex2.h
+    SRGGE/ex2.h \
+    SRGGE/ex4.h
 		
 SOURCES +=	main.cpp		\ 
 		MainWindow.cpp 		\
@@ -57,7 +58,8 @@ SOURCES +=	main.cpp		\
     FRR/ssao_viewer.cpp \
     FRR/separable.cpp \
     SRGGE/ex1.cpp \
-    SRGGE/ex2.cpp
+    SRGGE/ex2.cpp \
+    SRGGE/ex4.cpp
 
 
 DISTFILES += \

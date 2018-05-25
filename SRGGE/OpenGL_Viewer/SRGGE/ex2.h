@@ -21,11 +21,11 @@ class ex2 : public ex1
     Q_OBJECT
 
 public:
-    ex2		(const QGLFormat &glf, QWidget *parent = 0);
+    ex2             (const QGLFormat &glf, QWidget *parent = 0);
     QGroupBox*      controlPanel();
-    void            initializeGL();
     void            initVertexBuffer();
-    void            computeGrid();
+
+    void            computeGrid(int level);
     void            computeQuadric();
     int             cellid(int v, int l);
 
