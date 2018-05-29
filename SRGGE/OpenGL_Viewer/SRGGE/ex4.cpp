@@ -19,35 +19,31 @@ ex4::ex4(const QGLFormat &glf, QWidget *parent) : ex2(glf, parent)
 
 
 
-float ex4::computeIndivCost(int i, int j, int L){
+float ex4::computeIndivCost(Eigen::Matrix4f view, Eigen::Matrix4f model, int i, int j, int L){
 
     float size=2*mesh_->max_[0];
-
-    Eigen::Matrix4f view = camera_.SetView();
-    Eigen::Matrix4f model = camera_.SetModel();
 
     Eigen::Affine3f t(Eigen::Translation3f(Eigen::Vector3f((-copies/2*size)+2*size*float(i),0,(-copies/2*size)+2*size*float(j))));
     Eigen::Matrix4f m = t.matrix();
     model = model * m;
 
-    Eigen::Vector3f diag = mesh_->max_ - mesh_->min_;
-    Eigen::Vector3f Center = diag/2;
-    Eigen::Vector4f viewDiag = view*model*Eigen::Vector4f(diag[0],diag[1],diag[2],1.0);
-    Eigen::Vector4f viewCenter = view*model*Eigen::Vector4f(Center[0],Center[1],Center[2],1.0);
+    Eigen::Vector3f diag = mesh_->max_ - mesh_->min_; //Diagonal of bounding box
+    Eigen::Vector3f Center = diag/2; //Center of bounding box
 
-    Eigen::Vector3f D(viewDiag[0],viewDiag[1],viewDiag[2]);
+    Eigen::Vector4f viewCenter = view*model*Eigen::Vector4f(Center[0],Center[1],Center[2],1.0); //Change the center into view space to get the distance from the viewport
     Eigen::Vector3f C(viewCenter[0],viewCenter[1],viewCenter[2]);
 
-    float d1 = D.norm();  //diagonal d
-    float d2 = C.norm();  //distance  D
+    float d1 = diag.norm();  //diagonal d
+    float d2 = C.norm();  //distance D
 
+    //Compute value of cost
     return d1/(pow(2,L)*d2);
 
 }
 
 
 
-
+//Store the 5 levels of details obtained with code of exercise 2
 void ex4::computeVFN(){
 
     V.clear();
@@ -79,22 +75,43 @@ void ex4::computeVFN(){
 }
 
 
-Eigen::MatrixXd ex4::computeCost(Eigen::MatrixXd Levels){
 
-    int n=Levels.rows();
-    Eigen::MatrixXd Cost = Eigen::MatrixXd::Zero(n,n);
+//Find the index of the model that has the lowest difference of cost when we reduce its LOD
+std::vector<int> ex4::findID(Eigen::Matrix4f view, Eigen::Matrix4f model, Eigen::MatrixXd Levels){
+
+    int n = Levels.rows();
+
+    float minCost = 0;
+    std::vector<int> index(2,0);
+    index[0]=-1;
+    index[1]=-1;
 
     for(int i=0; i<n; i++){
         for(int j=0; j<n; j++){
-            Cost(i,j)=computeIndivCost(i,j,Levels(i,j));
+            if(Levels(i,j)>0){
+                if(index[0]==-1){  //First time in the loop : minimum = first value
+                    minCost=computeIndivCost(view, model, i,j,Levels(i,j)-1)-computeIndivCost(view, model, i,j,Levels(i,j));
+                    index[0]=i;
+                    index[1]=j;
+                }
+                else{
+                    //Compute the difference between the cost of the model at the actual level and the cost of the model at the level-1
+                    float diff = computeIndivCost(view, model, i,j,Levels(i,j)-1)-computeIndivCost(view, model, i,j,Levels(i,j));
+                    if(diff<minCost){
+                        minCost = diff;  //Find the smallest cost
+                        index[0]=i;  //Keep the index of the model with the smallest cost (i,j) between the NxN models displayed
+                        index[1]=j;
+                    }
+                }
+            }
         }
     }
 
-    return Cost;
-
+    return index;
 }
 
 
+//Count the nb of triangles of all the generated models -> control the fps value
 int ex4::totTriangles(Eigen::MatrixXd Levels){
 
     int num_faces_0 = F[0].size()/3;
@@ -120,38 +137,27 @@ int ex4::totTriangles(Eigen::MatrixXd Levels){
                 tot+=num_faces_4;
         }
     }
-
     return tot;
-
 }
 
 
+//Computes the list of LOD for each NxN models
+Eigen::MatrixXd ex4::computeLevels(Eigen::Matrix4f view, Eigen::Matrix4f model, Eigen::MatrixXd Levels){
 
-Eigen::MatrixXd ex4::computeLevels(Eigen::MatrixXd Levels){
+    //While the nb of triangles is bigger than 5 000 000 to assure a framerate of 60fps
+    while(totTriangles(Levels)>5000000 && Levels!=Eigen::MatrixXd::Zero(copies,copies)){
 
-
-    Eigen::MatrixXd Cost = computeCost(Levels);
-
-    int it=0;
-    while(totTriangles(Levels)>5000000 && Levels!=Eigen::MatrixXd::Zero(copies,copies) && it<5000){
-
-        Eigen::MatrixXf::Index Row,Col;
-        float max = Cost.maxCoeff(&Row,&Col);
+        std::vector<int> index = findID(view, model, Levels);  //Find the model with the smallest cost
+        int Row = index[0];
+        int Col = index[1];
 
         if(Levels(Row,Col)!=0){
-            Levels(Row,Col)-=1;
-            Cost=computeCost(Levels);
-            totTriangles(Levels);
+            Levels(Row,Col)-=1;  //If the model is not already minimum then decrease it
+            totTriangles(Levels);  //Update the total numbers of triangles
         }
-        it+=1;
     }
 
-
-    std::cout << Levels << std::endl;
-
     return Levels;
-
-
 }
 
 
@@ -164,6 +170,7 @@ void ex4::paintGL()
     glViewport(0,0,width_,height_); // Render on the whole framebuffer
     glClearColor(1.0f,1.0f,1.0f,1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
 
     if (mesh_ != nullptr) {
 
@@ -188,10 +195,12 @@ void ex4::paintGL()
 
         float size=2*mesh_->max_[0];
 
+        Levels=4*Eigen::MatrixXd::Ones(copies,copies);
+        Levels=computeLevels(view, model, Levels);
+
         for(int i =0; i<copies; i++){
 
             for(int j=0; j<copies; j++){
-
 
                 //Translation
                 Eigen::Affine3f t(Eigen::Translation3f(Eigen::Vector3f((-copies/2*size)+2*size*float(i),0,(-copies/2*size)+2*size*float(j))));
@@ -203,38 +212,50 @@ void ex4::paintGL()
                 gShader->setMat4("u_model",model);
                 gShader->setMat3("u_normal_matrix",normal);
 
-                //RENDER MODEL
+                //RENDER MODELS depending on the level of details they should have
 
                 if(Levels(i,j)==0){
+                    gShader->setInt("level",Levels(i,j));
                     glBindVertexArray(vao0);
                     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,vboIndex0);
                     glDrawElements(GL_TRIANGLES,F[0].size(),GL_UNSIGNED_INT,0);
-                    //std::cout << "level 0" << std::endl;
+                    glBindVertexArray(0);
+                    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,0);
                 }
                 if(Levels(i,j)==1){
+                    gShader->setInt("level",Levels(i,j));
                     glBindVertexArray(vao1);
                     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,vboIndex1);
                     glDrawElements(GL_TRIANGLES,F[1].size(),GL_UNSIGNED_INT,0);
-                    //std::cout << "level 1" << std::endl;
+                    glBindVertexArray(0);
+                    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,0);
                 }
                 if(Levels(i,j)==2){
+                    gShader->setInt("level",Levels(i,j));
                     glBindVertexArray(vao2);
                     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,vboIndex2);
                     glDrawElements(GL_TRIANGLES,F[2].size(),GL_UNSIGNED_INT,0);
-                    //std::cout << "level 2" << std::endl;
+                    glBindVertexArray(0);
+                    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,0);
                 }
                 if(Levels(i,j)==3){
+                    gShader->setInt("level",Levels(i,j));
                     glBindVertexArray(vao3);
                     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,vboIndex3);
                     glDrawElements(GL_TRIANGLES,F[3].size(),GL_UNSIGNED_INT,0);
-                    //std::cout << "level 3" << std::endl;
+                    glBindVertexArray(0);
+                    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,0);
                 }
                 if(Levels(i,j)==4){
+                    gShader->setInt("level",Levels(i,j));
                     glBindVertexArray(vao4);
                     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,vboIndex4);
+                    glColor3f(1.0, 0.0, 0.0);
                     glDrawElements(GL_TRIANGLES,F[4].size(),GL_UNSIGNED_INT,0);
-                    //std::cout << "level 4" << std::endl;
+                    glBindVertexArray(0);
+                    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,0);
                 }
+
 
                 //Reset ModelView
                 model=camera_.SetModel();
@@ -270,40 +291,11 @@ void ex4::initVertexBuffer()
     if (mesh_ == nullptr) return;
 
 
-//    glGenVertexArrays(1,&vao);
-//    glBindVertexArray(vao);
-
-//    static bool flag=1;
-
-//    if(flag){
-
-
-//        glGenBuffers(1,&vboVertex1);
-//        glGenBuffers(1,&vboVertex2);
-//        glGenBuffers(1,&vboVertex3);
-//        glGenBuffers(1,&vboVertex4);
-
-//        glGenBuffers(1,&vboNormal1);
-//        glGenBuffers(1,&vboNormal2);
-//        glGenBuffers(1,&vboNormal3);
-//        glGenBuffers(1,&vboNormal4);
-
-//        glGenBuffers(1,&vboIndex1);
-//        glGenBuffers(1,&vboIndex2);
-//        glGenBuffers(1,&vboIndex3);
-//        glGenBuffers(1,&vboIndex4);
-
-//        flag=0;
-//    }
-
-
     computeVFN();
-
     Levels=Eigen::MatrixXd::Ones(copies,copies);
     Levels=4*Levels;
 
-    //std::cout << Levels << std::endl;
-
+    //Send the 5 LOD to 5 different VAO
 
     //------------- 0 -----------------
 
@@ -328,6 +320,10 @@ void ex4::initVertexBuffer()
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,vboIndex0);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER,F[0].size()* sizeof(int),&F[0][0],GL_STATIC_DRAW);
 
+    glBindBuffer(GL_ARRAY_BUFFER,0);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,0);
+    glBindVertexArray(0);
+
 
     //------------- 1 -----------------
 
@@ -335,19 +331,28 @@ void ex4::initVertexBuffer()
     glBindVertexArray(vao1);
 
     //Vertex positions
+    glGenBuffers(1,&vboVertex1);
     glBindBuffer(GL_ARRAY_BUFFER,vboVertex1);
     glBufferData(GL_ARRAY_BUFFER,V[1].size()* sizeof(GLfloat),&V[1][0],GL_STATIC_DRAW);
     glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,0 ,0);
     glEnableVertexAttribArray(0);
 
     //Vertex normals
+    glGenBuffers(1,&vboNormal1);
     glBindBuffer(GL_ARRAY_BUFFER,vboNormal1);
     glBufferData(GL_ARRAY_BUFFER,N[1].size()* sizeof(float),&N[1][0],GL_STATIC_DRAW);
     glVertexAttribPointer(1,3,GL_FLOAT,GL_FALSE,0,0);
     glEnableVertexAttribArray(1);
 
+    glGenBuffers(1,&vboIndex1);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,vboIndex1);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER,F[1].size()* sizeof(int),&F[1][0],GL_STATIC_DRAW);
+
+
+    glBindBuffer(GL_ARRAY_BUFFER,0);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,0);
+    glBindVertexArray(0);
+
 
     //------------- 2 -----------------
 
@@ -355,19 +360,27 @@ void ex4::initVertexBuffer()
     glBindVertexArray(vao2);
 
     //Vertex positions
+    glGenBuffers(1,&vboVertex2);
     glBindBuffer(GL_ARRAY_BUFFER,vboVertex2);
     glBufferData(GL_ARRAY_BUFFER,V[2].size()* sizeof(GLfloat),&V[2][0],GL_STATIC_DRAW);
     glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,0 ,0);
     glEnableVertexAttribArray(0);
 
     //Vertex normals
+    glGenBuffers(1,&vboNormal2);
     glBindBuffer(GL_ARRAY_BUFFER,vboNormal2);
     glBufferData(GL_ARRAY_BUFFER,N[2].size()* sizeof(float),&N[2][0],GL_STATIC_DRAW);
     glVertexAttribPointer(1,3,GL_FLOAT,GL_FALSE,0,0);
     glEnableVertexAttribArray(1);
 
+    glGenBuffers(1,&vboIndex2);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,vboIndex2);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER,F[2].size()* sizeof(int),&F[2][0],GL_STATIC_DRAW);
+
+
+    glBindBuffer(GL_ARRAY_BUFFER,0);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,0);
+    glBindVertexArray(0);
 
     //------------- 3 -----------------
 
@@ -392,7 +405,12 @@ void ex4::initVertexBuffer()
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,vboIndex3);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER,F[3].size()* sizeof(int),&F[3][0],GL_STATIC_DRAW);
 
-//    //------------- 4 -----------------
+
+    glBindBuffer(GL_ARRAY_BUFFER,0);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,0);
+    glBindVertexArray(0);
+
+    //------------- 4 -----------------
 
 
     glGenVertexArrays(1,&vao4);
@@ -416,7 +434,8 @@ void ex4::initVertexBuffer()
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,vboIndex4);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER,F[4].size()* sizeof(int),&F[4][0],GL_STATIC_DRAW);
 
-
+    glBindBuffer(GL_ARRAY_BUFFER,0);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,0);
     glBindVertexArray(0);
 
 }

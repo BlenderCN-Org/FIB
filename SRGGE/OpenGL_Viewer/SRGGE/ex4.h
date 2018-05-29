@@ -27,11 +27,11 @@ public:
     void                                    initVertexBuffer();
     QGroupBox*                              controlPanel();
 
-    float                                   computeIndivCost(int i, int j, int L);
-    Eigen::MatrixXd                         computeLevels(Eigen::MatrixXd Levels);
+    float                                   computeIndivCost(Eigen::Matrix4f view, Eigen::Matrix4f model, int i, int j, int L);
+    Eigen::MatrixXd                         computeLevels(Eigen::Matrix4f view, Eigen::Matrix4f model, Eigen::MatrixXd Levels);
     void                                    computeVFN();
-    Eigen::MatrixXd                         computeCost(Eigen::MatrixXd Levels);
     int                                     totTriangles(Eigen::MatrixXd Levels);
+    std::vector<int>                        findID(Eigen::Matrix4f view, Eigen::Matrix4f model, Eigen::MatrixXd Cost);
 
     Eigen::MatrixXd Levels;
 
@@ -39,7 +39,7 @@ public:
     std::vector<std::vector<int>>           F;
     std::vector<std::vector<float>>         N;
 
-    //Eigen::MatrixXd                         Levels;
+
     GLuint                                  vao, vao0,vao1,vao2,vao3,vao4;
     GLuint                                  vboVertex0, vboNormal0, vboIndex0;
     GLuint                                  vboVertex1, vboNormal1, vboIndex1;
