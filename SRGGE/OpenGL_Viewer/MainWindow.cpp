@@ -81,8 +81,8 @@ MainWindow::createWidgets()
         << "SSAO"
         << "Separable Version"
         << "Exercise 1"
-        << "Exercise 2"
-        << "Exercise 3";
+        << "Exercise 2&3"
+        << "Exercise 4";
 
 	// format for legacy OpenGL with older GLSL (supporting attribute/varying qualifiers)
 	QGLFormat glfLegacy = QGLFormat::defaultFormat();	// base format
