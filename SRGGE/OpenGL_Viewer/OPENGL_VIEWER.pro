@@ -44,7 +44,8 @@ HEADERS +=	MainWindow.h		\
     FRR/separable.h \
     SRGGE/ex1.h \
     SRGGE/ex2.h \
-    SRGGE/ex4.h
+    SRGGE/ex4.h \
+    SRGGE/ex5.h
 		
 SOURCES +=	main.cpp		\ 
 		MainWindow.cpp 		\
@@ -59,7 +60,8 @@ SOURCES +=	main.cpp		\
     FRR/separable.cpp \
     SRGGE/ex1.cpp \
     SRGGE/ex2.cpp \
-    SRGGE/ex4.cpp
+    SRGGE/ex4.cpp \
+    SRGGE/ex5.cpp
 
 
 DISTFILES += \
@@ -72,4 +74,6 @@ DISTFILES += \
     shaders/separable.frag \
     shaders/separable.vert \
     shaders/try.frag \
-    shaders/try.vert
+    shaders/try.vert \
+    shaders/try_ex4.frag \
+    shaders/try_ex4.vert

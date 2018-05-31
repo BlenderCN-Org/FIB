@@ -25,7 +25,7 @@ bool ReadFromPly(const std::string &filename, TriangleMesh *mesh);
  * @param mesh The mesh to be stored.
  * @return Whether it was able to store the file.
  */
-bool WriteToPly(const std::string &filename, const TriangleMesh &mesh);
+bool WriteToPly(const std::string &filename, TriangleMesh *mesh);
 
 }  // namespace data_representation
 

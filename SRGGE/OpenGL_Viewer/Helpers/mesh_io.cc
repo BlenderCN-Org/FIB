@@ -182,17 +182,61 @@ bool ReadFromPly(const std::string &filename, TriangleMesh *mesh) {
   return true;
 }
 
-bool WriteToPly(const std::string &filename, const TriangleMesh &mesh) {
+bool WriteToPly(const std::string &filename, TriangleMesh *mesh) {
   (void)filename;
   (void)mesh;
 
-  std::cerr << "Not yet implemented" << std::endl;
 
-  // TODO: Implement storing to PLY format.
+  std::ofstream outFile;
 
-  // END.
+  outFile.open(filename.c_str(), std::ios_base::out | std::ios_base::binary);
+  if (!outFile.is_open() || !outFile.good()) return false;
 
-  return false;
+  outFile << "ply" << std::endl;
+  outFile << "format binary_little_endian 1.0" << std::endl;
+  outFile << "comment saved by EG" << std::endl;
+  outFile << "element vertex " << mesh->vertices_.size()/3 << std::endl;
+  outFile << "property float x" << std::endl;
+  outFile << "property float y" << std::endl;
+  outFile << "property float z" << std::endl;
+  outFile << "element face " << mesh->faces_.size()/3 << std::endl;
+  outFile << "property list uchar int vertex_indices" << std::endl;
+  outFile << "end_header" << std::endl;
+
+  //Points
+  for(int i=0; i<(int) mesh->vertices_.size()/3; i++)
+  {
+      for (int j=0; j<3; j++)
+      {
+          //outFile.write( reinterpret_cast<const char*>( &mesh->vertices_[i*3+j] ), sizeof( float ));
+          outFile << mesh->vertices_[i*3+j];
+          outFile << " ";
+      }
+      outFile << std::endl;
+  }
+
+
+  //Faces
+  for(int i=0; i<(int) mesh->faces_.size()/3; i++)
+  {
+      outFile << "3 ";
+      for (int j=0; j<3; j++)
+      {
+          //outFile.write( reinterpret_cast<const char*>( &mesh->faces_[i*3+j] ), sizeof( int ));
+          outFile << mesh->faces_[i*3+j];
+          outFile << " ";
+      }
+      outFile << std::endl;
+  }
+
+  outFile.close();
+
+  return true;
 }
+
+
+
+
+
 
 }  // namespace data_representation

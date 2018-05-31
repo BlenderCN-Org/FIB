@@ -249,7 +249,7 @@ void Viewer1::importModel()
 {
     QString filename;
 
-    filename = QFileDialog::getOpenFileName(this, tr("Load model"), "./",
+    filename = QFileDialog::getOpenFileName(this, tr("Load model"), "/Users/Emy/Documents/Cours/Models",
                                               tr("PLY Files ( *.ply )"));
     if (!filename.isNull()) {
          if(!mesh_importer.LoadModel(filename))
@@ -261,11 +261,17 @@ void Viewer1::importModel()
 
 void Viewer1::exportModel(){
     QString filename;
-
-    filename = QFileDialog::getSaveFileName(this, "Save file",tr("PLY Files (*.ply)"));
+    filename =  QFileDialog::getSaveFileName(this, tr("Save File"),"/Users/Emy/Desktop", tr("PLY Files (*.ply)"));
 
     if(filename.isNull())
         filename = "untitled";
+
+    if (!filename.isNull()) {
+         if(!mesh_importer.ExportModel(filename))
+              QMessageBox::warning(this, tr("Error"),
+                              tr("The model could not be saved"));
+      }
+
 }
 
 

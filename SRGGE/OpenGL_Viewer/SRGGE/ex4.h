@@ -22,7 +22,7 @@ class ex4 : public ex2
 
 public:
     ex4(const QGLFormat &glf, QWidget *parent = 0);
-
+    void                                    initializeGL();
     void                                    paintGL();
     void                                    initVertexBuffer();
     QGroupBox*                              controlPanel();

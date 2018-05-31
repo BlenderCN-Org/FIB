@@ -10,12 +10,35 @@
 
 ex4::ex4(const QGLFormat &glf, QWidget *parent) : ex2(glf, parent)
 {
-
     // init vars
     setFocusPolicy(Qt::StrongFocus);
+}
 
+
+void ex4::initializeGL()
+{
+
+    // initialize GL function resolution for current context
+    initializeGLFunctions();
+
+    gShader = new Shader(QString("/Users/Emy/GitHub/FIB/SRGGE/OpenGL_Viewer/shaders/try_ex4.vert"), QString("/Users/Emy/GitHub/FIB/SRGGE/OpenGL_Viewer/shaders/try_ex4.frag"));
+    gShader->m_program.bindAttributeLocation("vert", ATTRIB_VERTEX);
+    gShader->m_program.bindAttributeLocation("normal" , ATTRIB_NORMAL);
+
+    glGenVertexArrays(1, &vao);
+    glBindVertexArray(vao);
+
+    glEnable(GL_NORMALIZE);
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_BACK);
+    glEnable(GL_DEPTH_TEST);
+
+    // init state variables
+    glClearColor(1.0, 1.0, 1.0, 1.0);	// set background color
+    glColor3f   (1.0, 1.0, 0.0);		// set foreground color
 
 }
+
 
 
 

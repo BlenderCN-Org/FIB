@@ -16,6 +16,7 @@ class MI
 public:
     MI              (HW *hw);
     bool            LoadModel(QString filename);
+    bool            ExportModel(QString filename);
     void            AddImportExportPLY(QGroupBox*groupBox );
 
 private:

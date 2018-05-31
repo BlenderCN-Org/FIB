@@ -7,6 +7,8 @@ flat in vec3 light_pos;
 
 out vec4 frag_color;
 
+uniform int level;
+
 void main (void) {
    vec3 L = normalize(light_pos - V);
    vec3 E = normalize(-V);
@@ -14,6 +16,23 @@ void main (void) {
 
    //calculate Ambient Term:
    vec3 Iamb = vec3(1.0, 1.0, 1.0);
+
+   if(level==4){
+       Iamb = vec3(1.0, 0.0, 0.0);
+   }
+   if(level==3){
+       Iamb = vec3(0.0, 1.0, 0.0);
+   }
+   if(level==2){
+       Iamb = vec3(0.0, 1.0, 1.0);
+   }
+   if(level==1){
+       Iamb = vec3(0.0, 0.0, 1.0);
+   }
+   if(level==0){
+       Iamb = vec3(1.0, 1.0, 0.0);
+   }
+
 
 
    //calculate Diffuse Term:
