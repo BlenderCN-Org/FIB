@@ -139,7 +139,8 @@ bool ex5::checkIE(std::vector<std::vector<int>> map, int line, int row){
                 count_right+=1;
     }
 
-    return (count_left%2==0 && count_right%2==0);
+    //Return true if inside
+    return (count_left%2!=0 && count_right%2!=0);
 
 }
 
@@ -191,10 +192,14 @@ void ex5::paintGL()
 
                 if(museum[i][j]==0){
                     Eigen::Vector3f c;
-                    if(!checkIE(museum,i,j))
+                    if(checkIE(museum,i,j)){
                         c[0]=1.0;
-                    else
+                        c[1]=0.0;
+                    }
+                    else{
+                        c[0]=0.0;
                         c[1]=1.0;
+                    }
                     gShader->setVec3("color",c);
                     glBindVertexArray(VAO);
                     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,EBO);
