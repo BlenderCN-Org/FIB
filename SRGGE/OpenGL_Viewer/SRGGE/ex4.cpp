@@ -273,7 +273,6 @@ void ex4::paintGL()
                     gShader->setInt("level",Levels(i,j));
                     glBindVertexArray(vao4);
                     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,vboIndex4);
-                    glColor3f(1.0, 0.0, 0.0);
                     glDrawElements(GL_TRIANGLES,F[4].size(),GL_UNSIGNED_INT,0);
                     glBindVertexArray(0);
                     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,0);

@@ -305,6 +305,11 @@ class Camera {
   double GetWidth(void);
   double GetHeight(void);
 
+
+  void MoveH(double modifier);
+  void MoveV(double modifier);
+
+
 };
 
 }  //  namespace data_visualization

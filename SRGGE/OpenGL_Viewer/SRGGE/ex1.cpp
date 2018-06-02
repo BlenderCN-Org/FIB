@@ -5,8 +5,6 @@
 #include </usr/local/include/glm/gtc/type_ptr.hpp>
 #include "time.h"
 
-//int final_time3, initial_time3=time(NULL), frames3=0;
-
 
 ex1::ex1(const QGLFormat &glf, QWidget *parent) : Viewer1(glf, parent)
 {

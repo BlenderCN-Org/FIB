@@ -93,11 +93,11 @@ void HW::initShader(QString vshaderName, QString fshaderName)
 // CAMERA
 
 void HW::keyPressEvent(QKeyEvent *event) {
-  if (event->key() == Qt::Key_Up) camera_.Zoom(-5);
-  if (event->key() == Qt::Key_Down) camera_.Zoom(5);
+  if (event->key() == Qt::Key_Up) camera_.MoveV(10);
+  if (event->key() == Qt::Key_Down) camera_.MoveV(-10);
 
-  if (event->key() == Qt::Key_Left) camera_.Rotate(-1);
-  if (event->key() == Qt::Key_Right) camera_.Rotate(1);
+  if (event->key() == Qt::Key_Left) camera_.MoveH(-10);
+  if (event->key() == Qt::Key_Right) camera_.MoveH(10);
 
   if (event->key() == Qt::Key_W) camera_.Zoom(-5);
   if (event->key() == Qt::Key_S) camera_.Zoom(5);

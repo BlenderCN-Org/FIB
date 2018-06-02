@@ -76,4 +76,6 @@ DISTFILES += \
     shaders/try.frag \
     shaders/try.vert \
     shaders/try_ex4.frag \
-    shaders/try_ex4.vert
+    shaders/try_ex4.vert \
+    shaders/phong.frag \
+    shaders/phong.vert

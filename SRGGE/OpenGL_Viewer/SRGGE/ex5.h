@@ -21,34 +21,28 @@ class ex5 : public Viewer1
 
 public:
     ex5		(const QGLFormat &glf, QWidget *parent = 0);
-    void            initVertexBuffer();		// init vertices
-    QGroupBox*      controlPanel();
+    QGroupBox*              controlPanel();
 
-    GLuint          depthrenderbuffer;
-    int             copies=1;
+    void                    paintGL();
+    void                    initializeGL();
+    void                    initVertexBuffer();
+    void                    computeQuad();
+    bool                    checkIE(std::vector<std::vector<int>> map, int line, int row);
 
-    QElapsedTimer   t_Timer;
-    double          lastTime;
-    int             nbFrames=0;
+    bool                    importMap(const std::string &filename);
 
-    Shader          *gShader;
+    GLuint                  VAO, VBO, NVBO, EBO;
 
-    QLabel          *print_fps;
-
-    int final_time, initial_time=time(NULL), frames=0;
+    std::vector<int>        faces;
+    std::vector<float>      vertices;
+    std::vector<float>      normals;
 
 
-protected:
-    void		initializeGL	();		// init GL state
-    void		paintGL		();		// render GL scene
-
+    std::vector<std::vector<int>>   museum;
 
 public slots:
-    void setNumberCopies(int);
+    void loadMap();
 
-
-signals:
-    void SetFramerate(QString);
 
 };
 #endif // ex5_H

@@ -200,5 +200,15 @@ double Camera::GetHeight(){
 }
 
 
+void Camera::MoveH(double modifier){
+    viewport_x_ += modifier;
+}
+
+
+void Camera::MoveV(double modifier){
+    viewport_y_ += modifier;
+}
+
+
 
 }  //  namespace data_visualization
