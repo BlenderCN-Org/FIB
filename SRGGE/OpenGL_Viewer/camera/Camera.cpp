@@ -201,12 +201,14 @@ double Camera::GetHeight(){
 
 
 void Camera::MoveH(double modifier){
-    viewport_x_ += modifier;
+    pan_x_ += modifier;
+    SetView();
 }
 
 
 void Camera::MoveV(double modifier){
-    viewport_y_ += modifier;
+    pan_y_ += modifier;
+    SetView();
 }
 
 
