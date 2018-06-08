@@ -19,10 +19,11 @@ public:
     bool            ExportModel(QString filename);
     void            AddImportExportPLY(QGroupBox*groupBox );
 
+    HW              *m_hw;
+
 private:
     QLabel          *m_vertexCount;
     QLabel          *m_facesCount;
-    HW              *m_hw;
 
 
 };

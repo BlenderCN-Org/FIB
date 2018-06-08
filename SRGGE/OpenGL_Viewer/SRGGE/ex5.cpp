@@ -30,6 +30,13 @@ void ex5::initializeGL()
     glGenVertexArrays(1, &VAO);
     glBindVertexArray(VAO);
 
+    glGenVertexArrays(1, &WVAO);
+    glBindVertexArray(WVAO);
+
+    glGenVertexArrays(1, &VAO_M1);
+    glBindVertexArray(VAO_M1);
+
+
     glEnable(GL_NORMALIZE);
 //    glEnable(GL_CULL_FACE);
 //    glCullFace(GL_BACK);
@@ -60,13 +67,6 @@ void ex5::initVertexBuffer(){
     glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,0 ,0);
     glEnableVertexAttribArray(0);
 
-    //Vertex normals
-    glGenBuffers(1,&NVBO);
-    glBindBuffer(GL_ARRAY_BUFFER,NVBO);
-    glBufferData(GL_ARRAY_BUFFER,normals.size()* sizeof(float),&normals[0],GL_STATIC_DRAW);
-    glVertexAttribPointer(1,3,GL_FLOAT,GL_FALSE,0,0);
-    glEnableVertexAttribArray(1);
-
     glGenBuffers(1,&EBO);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,EBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER,faces.size()* sizeof(int),&faces[0],GL_STATIC_DRAW);
@@ -82,19 +82,11 @@ void ex5::initVertexBuffer(){
     glGenVertexArrays(1,&WVAO);
     glBindVertexArray(WVAO);
 
-    //Vertex positions
     glGenBuffers(1,&WVBO);
     glBindBuffer(GL_ARRAY_BUFFER,WVBO);
     glBufferData(GL_ARRAY_BUFFER,Wvertices.size()* sizeof(GLfloat),&Wvertices[0],GL_STATIC_DRAW);
     glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,0 ,0);
     glEnableVertexAttribArray(0);
-
-//    //Vertex normals
-//    glGenBuffers(1,&WNVBO);
-//    glBindBuffer(GL_ARRAY_BUFFER,WNVBO);
-//    glBufferData(GL_ARRAY_BUFFER,Wnormals.size()* sizeof(float),&Wnormals[0],GL_STATIC_DRAW);
-//    glVertexAttribPointer(1,3,GL_FLOAT,GL_FALSE,0,0);
-//    glEnableVertexAttribArray(1);
 
     glGenBuffers(1,&WEBO);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,WEBO);
@@ -103,6 +95,38 @@ void ex5::initVertexBuffer(){
     glBindBuffer(GL_ARRAY_BUFFER,0);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,0);
     glBindVertexArray(0);
+
+
+    //MODEL 1
+
+
+    if (mesh == nullptr) return;
+
+    std::cout << "loading" << std::endl;
+
+    glGenVertexArrays(1,&VAO_M1);
+    glBindVertexArray(VAO_M1);
+
+    glGenBuffers(1, &vboVertex);
+    glBindBuffer(GL_ARRAY_BUFFER, vboVertex);
+    glBufferData(GL_ARRAY_BUFFER, mesh->vertices_.size() * sizeof(float), &mesh->vertices_[0], GL_STATIC_DRAW);
+    glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,0 ,0);
+    glEnableVertexAttribArray(0);
+
+    glGenBuffers(1, &vboNormal);
+    glBindBuffer(GL_ARRAY_BUFFER, vboNormal);
+    glBufferData(GL_ARRAY_BUFFER, mesh->normals_.size() * sizeof(float), &mesh->normals_[0], GL_STATIC_DRAW);
+    glVertexAttribPointer(1,3,GL_FLOAT,GL_FALSE,0,0);
+    glEnableVertexAttribArray(1);
+
+    glGenBuffers(1, &vboIndex);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vboIndex);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, mesh->faces_.size() * sizeof(int), &mesh->faces_[0], GL_STATIC_DRAW);
+
+    glBindBuffer(GL_ARRAY_BUFFER,0);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,0);
+    glBindVertexArray(0);
+
 
 
 
@@ -306,7 +330,9 @@ void ex5::paintGL()
     glClearColor(1.0f,1.0f,1.0f,1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+
     if(!museum.empty()){
+//    if(mesh!=nullptr ){
 
         // RENDER GEOMETRY
 
@@ -326,10 +352,11 @@ void ex5::paintGL()
 
         normal = normal.inverse().transpose();
 
-
-
         for(int i=0; i<(int) museum.size(); i++){
             for(int j=0; j<(int) museum[0].size(); j++){
+
+//        for(int i=0; i<10; i++){
+//            for(int j=0; j<10; j++){
 
                 //Translation
                 Eigen::Affine3f t(Eigen::Translation3f(Eigen::Vector3f(-float(i),-1,-float(j))));
@@ -345,6 +372,25 @@ void ex5::paintGL()
                 gShader->setMat4("u_view",view);
                 gShader->setMat4("u_model",model);
                 gShader->setMat3("u_normal_matrix",normal);
+
+//                float size=2*mesh->max_[0];
+//                Eigen::Matrix4f modelMatrix = Eigen::Matrix4f::Identity();
+//                modelMatrix(0,0)=1/size;
+//                modelMatrix(1,1)=1/size;
+//                modelMatrix(2,2)=1/size;
+
+//                Eigen::Vector3f c(0.0,0.0,1.0);
+//                c[0]=1;
+//                c[1]=1;
+//                c[2]=1;
+//                gShader->setVec3("color",c);
+
+//                gShader->setMat4("u_model",modelMatrix);
+//                glBindVertexArray(VAO_M1);
+//                glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,vboIndex);
+//                glDrawElements(GL_TRIANGLES,mesh->faces_.size(),GL_UNSIGNED_INT,0);
+//                glBindVertexArray(0);
+//                glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,0);
 
 
                 //DISPLAY
@@ -372,17 +418,28 @@ void ex5::paintGL()
 
 
                 if(museum[i][j]>0){
-                    Eigen::Vector3f c(1.0,0.0,0.0);
-                    gShader->setVec3("color",c);
-                    glBindVertexArray(VAO);
-                    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,EBO);
-                    glDrawElements(GL_TRIANGLES,faces.size(),GL_UNSIGNED_INT,0);
-                    glBindVertexArray(0);
-                    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,0);
+//                    Eigen::Vector3f c(1.0,0.0,0.0);
+//                    gShader->setVec3("color",c);
+//                    glBindVertexArray(VAO);
+//                    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,EBO);
+//                    glDrawElements(GL_TRIANGLES,faces.size(),GL_UNSIGNED_INT,0);
+//                    glBindVertexArray(0);
+//                    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,0);
 
                     if(museum[i][j]==1){
 
-                        Eigen::Vector3f c(0.5,0.5,0.5);
+                        Eigen::Vector3f c(1.0,0.0,0.0);
+                        gShader->setVec3("color",c);
+                        glBindVertexArray(VAO);
+                        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,EBO);
+                        glDrawElements(GL_TRIANGLES,faces.size(),GL_UNSIGNED_INT,0);
+                        glBindVertexArray(0);
+                        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,0);
+
+
+                        c[0]=0.5;
+                        c[1]=0.5;
+                        c[2]=0.5;
                         gShader->setVec3("color",c);
 
                         std::vector<int> Walls = checkWall(museum, i, j);
@@ -434,6 +491,40 @@ void ex5::paintGL()
 
                         }
                     }
+
+                    if(mesh!=nullptr && museum[i][j]==2){
+
+                        Eigen::Vector3f c(0.0,0.0,1.0);
+                        gShader->setVec3("color",c);
+                        glBindVertexArray(VAO);
+                        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,EBO);
+                        glDrawElements(GL_TRIANGLES,faces.size(),GL_UNSIGNED_INT,0);
+                        glBindVertexArray(0);
+                        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,0);
+
+
+                        float size=2*mesh->max_[0];
+                        Eigen::Matrix4f modelMatrix = Eigen::Matrix4f::Identity();
+                        modelMatrix(0,0)=1/size;
+                        modelMatrix(1,1)=1/size;
+                        modelMatrix(2,2)=1/size;
+                        modelMatrix = model* modelMatrix;
+
+                        c[0]=1;
+                        c[1]=1;
+                        c[2]=1;
+                        gShader->setVec3("color",c);
+
+                        gShader->setMat4("u_model",modelMatrix);
+                        glBindVertexArray(VAO_M1);
+                        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,vboIndex);
+                        glDrawElements(GL_TRIANGLES,mesh->faces_.size(),GL_UNSIGNED_INT,0);
+                        glBindVertexArray(0);
+                        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,0);
+
+                    }
+
+
                 }
 
 
@@ -444,7 +535,6 @@ void ex5::paintGL()
             }
 
         }
-
 
         glUseProgram(0);
 
@@ -514,7 +604,52 @@ bool ex5::importMap(const std::string &filename){
 
 }
 
+
 //--------------------------------------------------------------------------------
+
+
+
+bool ex5::LoadModel(QString filename) {
+  std::string file = filename.toUtf8().constData();
+  uint pos = file.find_last_of(".");
+  std::string type = file.substr(pos + 1);
+
+  mesh = std::unique_ptr<data_representation::TriangleMesh>(new data_representation::TriangleMesh);
+
+  bool res = false;
+  if (type.compare("ply") == 0) {
+    res = data_representation::ReadFromPly(file, mesh.get());
+  }
+
+  if (res) {
+
+      initVertexBuffer();
+      paintGL();
+
+      return true;
+
+
+  }
+
+  return false;
+}
+
+
+void ex5::importModel()
+{
+    QString filename;
+
+    filename = QFileDialog::getOpenFileName(this, tr("Load model"), "/Users/Emy/Documents/Cours/Models",
+                                              tr("PLY Files ( *.ply )"));
+    if (!filename.isNull()) {
+         if(!LoadModel(filename))
+              QMessageBox::warning(this, tr("Error"),
+                              tr("The file could not be opened"));
+      }
+
+}
+
+
 
 
 QGroupBox* ex5::controlPanel()
@@ -523,14 +658,22 @@ QGroupBox* ex5::controlPanel()
     QGroupBox *groupBox = HW::controlPanel();
     groupBox->setStyleSheet(GroupBoxStyle);
 
+    QPushButton *buttonImport  = new QPushButton("Import model");
+    //QPushButton *buttonExport  = new QPushButton("Export model");
+
+//    mesh_importer.AddImportExportPLY(groupBox);
 
     QPushButton *Load = new QPushButton("Load Map");
 
     connect(Load,SIGNAL(clicked()),this,SLOT(loadMap()));
+    connect(buttonImport, SIGNAL(clicked()), this, SLOT(importModel()));
 
     //Display
     auto layout = dynamic_cast<QGridLayout*>(groupBox->layout());
     int row = layout->rowCount() + 1;
+    row++;
+    layout->addWidget(buttonImport,row,0);
+    row++;
     row++;
     layout->addWidget(Load,row,0);
     row++;
