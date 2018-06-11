@@ -26,18 +26,21 @@ public:
     void                    paintGL();
     void                    initializeGL();
     void                    initVertexBuffer();
+
     void                    computeQuad();
     void                    computeWall();
 
     bool                    LoadModel(QString filename);
 
-    bool                    checkIE(std::vector<std::vector<int>> map, int line, int row);
+    void                    checkIE(std::vector<std::vector<int>> map);
+    bool                    checkIE_indiv(std::vector<std::vector<int>> map, int row, int line);
     std::vector<int>        checkWall(std::vector<std::vector<int>> map, int line, int row);
     bool                    importMap(const std::string &filename);
 
     GLuint                  VAO, VBO, NVBO, EBO;
     GLuint                  WVAO, WVBO, WNVBO, WEBO;
-    GLuint                  VAO_M1, vboVertex, vboNormal, vboIndex;
+
+    std::vector<GLuint>     VAO_M, vboVertex, vboNormal, vboIndex;
 
 
     std::vector<int>        faces;
@@ -50,7 +53,20 @@ public:
 
 
     std::vector<std::vector<int>>   museum;
-    std::unique_ptr<data_representation::TriangleMesh> mesh;
+//    std::vector<std::unique_ptr<data_representation::TriangleMesh>> mesh;
+
+    std::vector<std::vector<float>>         V;
+    std::vector<std::vector<int>>           F;
+    std::vector<std::vector<float>>         N;
+    std::vector<Eigen::Vector3f>         max;
+    std::vector<Eigen::Vector3f>         min;
+
+    Eigen::MatrixXd      IE; //int / ext
+
+
+
+    int                     num_models=0;
+
 
 
 public slots:

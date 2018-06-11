@@ -30,12 +30,6 @@ void ex5::initializeGL()
     glGenVertexArrays(1, &VAO);
     glBindVertexArray(VAO);
 
-    glGenVertexArrays(1, &WVAO);
-    glBindVertexArray(WVAO);
-
-    glGenVertexArrays(1, &VAO_M1);
-    glBindVertexArray(VAO_M1);
-
 
     glEnable(GL_NORMALIZE);
 //    glEnable(GL_CULL_FACE);
@@ -47,12 +41,26 @@ void ex5::initializeGL()
     glColor3f   (1.0, 1.0, 0.0);		// set foreground color
 
 
+    V.clear();
+    F.clear();
+    N.clear();
+    max.clear();
+    min.clear();
+
+    num_models=0;
+
+
 }
 
 
 
 void ex5::initVertexBuffer(){
 
+
+    VAO_M.clear();
+    vboVertex.clear();
+    vboNormal.clear();
+    vboIndex.clear();
 
     //Compute quads for ground
     computeQuad();
@@ -97,38 +105,48 @@ void ex5::initVertexBuffer(){
     glBindVertexArray(0);
 
 
-    //MODEL 1
 
-
-    if (mesh == nullptr) return;
+    if (V.size() == 0) return;
 
     std::cout << "loading" << std::endl;
 
-    glGenVertexArrays(1,&VAO_M1);
-    glBindVertexArray(VAO_M1);
 
-    glGenBuffers(1, &vboVertex);
-    glBindBuffer(GL_ARRAY_BUFFER, vboVertex);
-    glBufferData(GL_ARRAY_BUFFER, mesh->vertices_.size() * sizeof(float), &mesh->vertices_[0], GL_STATIC_DRAW);
-    glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,0 ,0);
-    glEnableVertexAttribArray(0);
+    for(int i=0; i<(int) V.size(); i++){
 
-    glGenBuffers(1, &vboNormal);
-    glBindBuffer(GL_ARRAY_BUFFER, vboNormal);
-    glBufferData(GL_ARRAY_BUFFER, mesh->normals_.size() * sizeof(float), &mesh->normals_[0], GL_STATIC_DRAW);
-    glVertexAttribPointer(1,3,GL_FLOAT,GL_FALSE,0,0);
-    glEnableVertexAttribArray(1);
+        GLuint VAO_Mod, vboV, vboN, vboI;
 
-    glGenBuffers(1, &vboIndex);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vboIndex);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, mesh->faces_.size() * sizeof(int), &mesh->faces_[0], GL_STATIC_DRAW);
+        glGenVertexArrays(1,&VAO_Mod);
+        glBindVertexArray(VAO_Mod);
 
-    glBindBuffer(GL_ARRAY_BUFFER,0);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,0);
-    glBindVertexArray(0);
+        glGenBuffers(1, &vboV);
+        glBindBuffer(GL_ARRAY_BUFFER, vboV);
+        glBufferData(GL_ARRAY_BUFFER, V[i].size() * sizeof(float), &V[i][0], GL_STATIC_DRAW);
+        glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,0 ,0);
+        glEnableVertexAttribArray(0);
+
+        glGenBuffers(1, &vboN);
+        glBindBuffer(GL_ARRAY_BUFFER, vboN);
+        glBufferData(GL_ARRAY_BUFFER, N[i].size() * sizeof(float), &N[i][0], GL_STATIC_DRAW);
+        glVertexAttribPointer(1,3,GL_FLOAT,GL_FALSE,0,0);
+        glEnableVertexAttribArray(1);
+
+        glGenBuffers(1, &vboI);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vboI);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, F[i].size() * sizeof(int), &F[i][0], GL_STATIC_DRAW);
+
+        VAO_M.push_back(VAO_Mod);
+        vboVertex.push_back(vboV);
+        vboNormal.push_back(vboN);
+        vboIndex.push_back(vboI);
+
+        glBindBuffer(GL_ARRAY_BUFFER,0);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,0);
+        glBindVertexArray(0);
 
 
+        }
 
+    num_models=V.size();
 
 }
 
@@ -224,9 +242,10 @@ void ex5::computeWall(){
 }
 
 
+//--------------------------------------------------------------------------------
 
-//Check if 0 is interior or exterior
-bool ex5::checkIE(std::vector<std::vector<int>> map, int line, int row){
+//Check if a 0 is surronded by 4 0 up, down, left & right
+bool ex5::checkIE_indiv(std::vector<std::vector<int>> map, int row, int line){
 
     bool flag_up=false;
     bool flag_down=false;
@@ -277,6 +296,98 @@ bool ex5::checkIE(std::vector<std::vector<int>> map, int line, int row){
 }
 
 
+
+//List all Interior / exterior 0 - double check the interior
+void ex5::checkIE(std::vector<std::vector<int>> map){
+
+    IE=Eigen::MatrixXd::Zero(map[0].size(),map.size());
+
+    for(int row=0; row<((int) map.size() -1); row++){
+        for(int line=0; line<((int) map[0].size()-1); line++){
+
+            if(map[line][row]!=1){
+
+                bool flag=checkIE_indiv(map,row,line); //True if 0 is found interior, false otherwise
+
+                //If the 0 is exterior, the test is always correct. We check the neighbours of interior ones
+                if(flag){
+
+                    //Flags stay false if we don't find any exterior 0 as neighbour (we stop when we find a 1)
+                    bool flag_up=false;
+                    bool flag_down=false;
+                    bool flag_left=false;
+                    bool flag_right=false;
+
+                    int i=row;
+                    int j=row;
+                    int k=line;
+                    int l=line;
+
+                    //UP
+                    if(row>0){
+                        while(map[line][i-1]!=1 && i>0){
+                            flag_up=(!checkIE_indiv(map,i-1,line));
+                            i-=1;
+                        }
+                    }
+
+                    //DOWN
+                    if(row<((int) map.size())){
+                        while(map[line][j+1]!=1 && j<((int) map.size()-1)){
+                            flag_down=(!checkIE_indiv(map,j+1,line));
+                            j+=1;
+                        }
+                    }
+
+                    //LEFT
+                    if(line>0){
+                        while(map[k-1][row]!=1 && k>0){
+                            flag_left=(!checkIE_indiv(map,row,k-1));
+                            k-=1;
+                        }
+                    }
+
+                    //RIGHT
+                    if(line<((int) map[0].size())){
+                        while(map[l+1][row]!=1 && l<((int) map[0].size()-1)){
+                            flag_right=(!checkIE_indiv(map,row,l+1));
+                            l+=1;
+                        }
+                    }
+
+
+                    if(row==2&&line==1){
+                        std::cout << flag_up << std::endl;
+                        std::cout << flag_down << std::endl;
+                        std::cout << flag_left << std::endl;
+                        std::cout << flag_right << std::endl;
+
+                    }
+
+                    if(flag_up||flag_down||flag_left||flag_right){  //If we find a 0 exterior neighbour
+                        flag=!flag;
+                    }
+                }
+
+                if(flag)
+                    IE(line,row)=1;  //1 if the 0 is a true interior
+
+            }
+        }
+    }
+
+
+
+
+
+}
+
+
+//--------------------------------------------------------------------------------
+
+
+
+
 //Check which walls should be created depending on the neighbours
 std::vector<int> ex5::checkWall(std::vector<std::vector<int>> map, int line, int row){
 
@@ -297,22 +408,22 @@ std::vector<int> ex5::checkWall(std::vector<std::vector<int>> map, int line, int
     }
 
     //UP
-    if(line!=0 && map[line-1][row]==0 && !checkIE(map,line-1,row)){
+    if(line!=0 && map[line-1][row]==0 && IE(line-1,row)==0){
         wall_map[0]=1;
     }
 
     //DOWN
-    if(line!=((int) map.size()-1) && map[line+1][row]==0 && !checkIE(map,line+1,row)){
+    if(line!=((int) map.size()-1) && map[line+1][row]==0 && IE(line+1,row)==0){
         wall_map[1]=1;
     }
 
     //LEFT
-    if(row!=0 && map[line][row-1]==0 && !checkIE(map,line,row-1)){
+    if(row!=0 && map[line][row-1]==0 && IE(line,row-1)==0){
          wall_map[2]=1;
     }
 
     //RIGHT
-    if(row!=((int) map[0].size()-1) && map[line][row+1]==0 && !checkIE(map,line,row+1)){
+    if(row!=((int) map[0].size()-1) && map[line][row+1]==0 && IE(line,row+1)==0){
         wall_map[3]=1;
     }
 
@@ -332,7 +443,6 @@ void ex5::paintGL()
 
 
     if(!museum.empty()){
-//    if(mesh!=nullptr ){
 
         // RENDER GEOMETRY
 
@@ -355,9 +465,6 @@ void ex5::paintGL()
         for(int i=0; i<(int) museum.size(); i++){
             for(int j=0; j<(int) museum[0].size(); j++){
 
-//        for(int i=0; i<10; i++){
-//            for(int j=0; j<10; j++){
-
                 //Translation
                 Eigen::Affine3f t(Eigen::Translation3f(Eigen::Vector3f(-float(i),-1,-float(j))));
                 Eigen::Matrix4f m = t.matrix();
@@ -373,32 +480,12 @@ void ex5::paintGL()
                 gShader->setMat4("u_model",model);
                 gShader->setMat3("u_normal_matrix",normal);
 
-//                float size=2*mesh->max_[0];
-//                Eigen::Matrix4f modelMatrix = Eigen::Matrix4f::Identity();
-//                modelMatrix(0,0)=1/size;
-//                modelMatrix(1,1)=1/size;
-//                modelMatrix(2,2)=1/size;
-
-//                Eigen::Vector3f c(0.0,0.0,1.0);
-//                c[0]=1;
-//                c[1]=1;
-//                c[2]=1;
-//                gShader->setVec3("color",c);
-
-//                gShader->setMat4("u_model",modelMatrix);
-//                glBindVertexArray(VAO_M1);
-//                glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,vboIndex);
-//                glDrawElements(GL_TRIANGLES,mesh->faces_.size(),GL_UNSIGNED_INT,0);
-//                glBindVertexArray(0);
-//                glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,0);
-
 
                 //DISPLAY
 
-
                 if(museum[i][j]==0){
                     Eigen::Vector3f c(3);
-                    if(checkIE(museum,i,j)){
+                    if(IE(i,j)==1){
                         c[0]=1.0;
                         c[1]=0.0;
                         c[2]=0.0;
@@ -417,82 +504,82 @@ void ex5::paintGL()
                 }
 
 
-                if(museum[i][j]>0){
-//                    Eigen::Vector3f c(1.0,0.0,0.0);
-//                    gShader->setVec3("color",c);
-//                    glBindVertexArray(VAO);
-//                    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,EBO);
-//                    glDrawElements(GL_TRIANGLES,faces.size(),GL_UNSIGNED_INT,0);
-//                    glBindVertexArray(0);
-//                    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,0);
+                //Print walls
+                if(museum[i][j]==1){
 
-                    if(museum[i][j]==1){
-
-                        Eigen::Vector3f c(1.0,0.0,0.0);
-                        gShader->setVec3("color",c);
-                        glBindVertexArray(VAO);
-                        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,EBO);
-                        glDrawElements(GL_TRIANGLES,faces.size(),GL_UNSIGNED_INT,0);
-                        glBindVertexArray(0);
-                        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,0);
+                    Eigen::Vector3f c(1.0,0.0,0.0);
+                    gShader->setVec3("color",c);
+                    glBindVertexArray(VAO);
+                    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,EBO);
+                    glDrawElements(GL_TRIANGLES,faces.size(),GL_UNSIGNED_INT,0);
+                    glBindVertexArray(0);
+                    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,0);
 
 
-                        c[0]=0.5;
-                        c[1]=0.5;
-                        c[2]=0.5;
-                        gShader->setVec3("color",c);
+                    c[0]=0.5;
+                    c[1]=0.5;
+                    c[2]=0.5;
+                    gShader->setVec3("color",c);
 
-                        std::vector<int> Walls = checkWall(museum, i, j);
-                        for(int k=0; k<4; k++){
+                    //Get the position of the walls around the tile
+                    std::vector<int> Walls = checkWall(museum, i, j);
+                    for(int k=0; k<4; k++){
 
-                            if(Walls[0]==1){
-                                Eigen::Affine3f t(Eigen::Translation3f(Eigen::Vector3f(-1,0,1)));
-                                Eigen::Matrix4f R1 = model*A.matrix()*t.matrix();
-                                gShader->setMat4("u_model",R1);
-                                glBindVertexArray(WVAO);
-                                glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,WEBO);
-                                glDrawElements(GL_TRIANGLES,Wfaces.size(),GL_UNSIGNED_INT,0);
-                                glBindVertexArray(0);
-                                glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,0);
-
-                            }
-
-                            if(Walls[1]==1){
-                                Eigen::Affine3f t(Eigen::Translation3f(Eigen::Vector3f(-1,0,0)));
-                                Eigen::Matrix4f R2 = model*A.matrix()*t.matrix();
-                                gShader->setMat4("u_model",R2);
-                                glBindVertexArray(WVAO);
-                                glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,WEBO);
-                                glDrawElements(GL_TRIANGLES,Wfaces.size(),GL_UNSIGNED_INT,0);
-                                glBindVertexArray(0);
-                                glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,0);
-
-                            }
-
-                            if(Walls[2]==1){
-                                Eigen::Affine3f t(Eigen::Translation3f(Eigen::Vector3f(0,0,1)));
-                                Eigen::Matrix4f R3=model*t.matrix();
-                                gShader->setMat4("u_model",R3);
-                                glBindVertexArray(WVAO);
-                                glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,WEBO);
-                                glDrawElements(GL_TRIANGLES,Wfaces.size(),GL_UNSIGNED_INT,0);
-                                glBindVertexArray(0);
-                                glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,0);
-                            }
-
-                            if(Walls[3]==1){
-                                gShader->setMat4("u_model",model);
-                                glBindVertexArray(WVAO);
-                                glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,WEBO);
-                                glDrawElements(GL_TRIANGLES,Wfaces.size(),GL_UNSIGNED_INT,0);
-                                glBindVertexArray(0);
-                                glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,0);
-                            }
+                        //Apply rotations to the quads and display them as walls
+                        if(Walls[0]==1){
+                            Eigen::Affine3f t(Eigen::Translation3f(Eigen::Vector3f(-1,0,1)));
+                            Eigen::Matrix4f R1 = model*A.matrix()*t.matrix();
+                            gShader->setMat4("u_model",R1);
+                            glBindVertexArray(WVAO);
+                            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,WEBO);
+                            glDrawElements(GL_TRIANGLES,Wfaces.size(),GL_UNSIGNED_INT,0);
+                            glBindVertexArray(0);
+                            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,0);
 
                         }
-                    }
 
-                    if(mesh!=nullptr && museum[i][j]==2){
+                        if(Walls[1]==1){
+                            Eigen::Affine3f t(Eigen::Translation3f(Eigen::Vector3f(-1,0,0)));
+                            Eigen::Matrix4f R2 = model*A.matrix()*t.matrix();
+                            gShader->setMat4("u_model",R2);
+                            glBindVertexArray(WVAO);
+                            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,WEBO);
+                            glDrawElements(GL_TRIANGLES,Wfaces.size(),GL_UNSIGNED_INT,0);
+                            glBindVertexArray(0);
+                            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,0);
+
+                        }
+
+                        if(Walls[2]==1){
+                            Eigen::Affine3f t(Eigen::Translation3f(Eigen::Vector3f(0,0,1)));
+                            Eigen::Matrix4f R3=model*t.matrix();
+                            gShader->setMat4("u_model",R3);
+                            glBindVertexArray(WVAO);
+                            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,WEBO);
+                            glDrawElements(GL_TRIANGLES,Wfaces.size(),GL_UNSIGNED_INT,0);
+                            glBindVertexArray(0);
+                            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,0);
+                        }
+
+                        if(Walls[3]==1){
+                            gShader->setMat4("u_model",model);
+                            glBindVertexArray(WVAO);
+                            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,WEBO);
+                            glDrawElements(GL_TRIANGLES,Wfaces.size(),GL_UNSIGNED_INT,0);
+                            glBindVertexArray(0);
+                            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,0);
+                        }
+
+                    }
+                }
+
+
+                //Print models
+                if(V.size()!=0 && museum[i][j]>1){
+
+                    if (museum[i][j]-1 <= (int) V.size()){
+
+                        //std::cout << VAO_M.size() << std::endl;
 
                         Eigen::Vector3f c(0.0,0.0,1.0);
                         gShader->setVec3("color",c);
@@ -503,12 +590,13 @@ void ex5::paintGL()
                         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,0);
 
 
-                        float size=2*mesh->max_[0];
+                        float size=fmax(2.5*max[museum[i][j]-2][0],2.5*max[museum[i][j]-2][2]);
                         Eigen::Matrix4f modelMatrix = Eigen::Matrix4f::Identity();
+                        Eigen::Affine3f t(Eigen::Translation3f(Eigen::Vector3f(-1*min[museum[i][j]-2][0],-min[museum[i][j]-2][1],-1*min[museum[i][j]-2][2])));
                         modelMatrix(0,0)=1/size;
                         modelMatrix(1,1)=1/size;
                         modelMatrix(2,2)=1/size;
-                        modelMatrix = model* modelMatrix;
+                        modelMatrix = model* modelMatrix*t.matrix();
 
                         c[0]=1;
                         c[1]=1;
@@ -516,15 +604,14 @@ void ex5::paintGL()
                         gShader->setVec3("color",c);
 
                         gShader->setMat4("u_model",modelMatrix);
-                        glBindVertexArray(VAO_M1);
-                        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,vboIndex);
-                        glDrawElements(GL_TRIANGLES,mesh->faces_.size(),GL_UNSIGNED_INT,0);
+                        glBindVertexArray(VAO_M[museum[i][j]-2]);
+                        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,vboIndex[museum[i][j]-2]);
+                        glDrawElements(GL_TRIANGLES,F[museum[i][j]-2].size(),GL_UNSIGNED_INT,0);
                         glBindVertexArray(0);
                         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,0);
 
+
                     }
-
-
                 }
 
 
@@ -597,6 +684,7 @@ bool ex5::importMap(const std::string &filename){
     fin.close();
 
     initVertexBuffer();
+    checkIE(museum);
     paintGL();
 
     return true;
@@ -614,15 +702,20 @@ bool ex5::LoadModel(QString filename) {
   uint pos = file.find_last_of(".");
   std::string type = file.substr(pos + 1);
 
-  mesh = std::unique_ptr<data_representation::TriangleMesh>(new data_representation::TriangleMesh);
+  std::unique_ptr<data_representation::TriangleMesh> mesh_temp= std::unique_ptr<data_representation::TriangleMesh>(new data_representation::TriangleMesh);
 
   bool res = false;
   if (type.compare("ply") == 0) {
-    res = data_representation::ReadFromPly(file, mesh.get());
+    res = data_representation::ReadFromPly(file, mesh_temp.get());
   }
 
   if (res) {
-
+      V.push_back(mesh_temp->vertices_);
+      F.push_back(mesh_temp->faces_);
+      N.push_back(mesh_temp->normals_);
+      max.push_back(mesh_temp->max_);
+      min.push_back(mesh_temp->min_);
+      num_models+=1;
       initVertexBuffer();
       paintGL();
 
