@@ -152,10 +152,11 @@ void ex2::paintGL()
                 glBindVertexArray(vao);
                 glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,vboIndex);
 
-                if(LODsimpleON||QuadricON)
+                if(LODsimpleON||QuadricON||ShapeON)
                 {
                     glDrawElements(GL_TRIANGLES,new_faces.size(),GL_UNSIGNED_INT,0);
                 }
+
                 else
                 {
                     glDrawElements(GL_TRIANGLES,mesh_->faces_.size(),GL_UNSIGNED_INT,0);
@@ -193,6 +194,11 @@ void ex2::paintGL()
 
 
 }
+
+
+//-----------------------------------------------------------------------------------------------
+// -------------------------------- Basic vertex clustering -------------------------------------
+//-----------------------------------------------------------------------------------------------
 
 
 //Given a vertices number, we return the id of the cell it is contained in
@@ -318,6 +324,17 @@ void ex2::computeGrid(int level){
      data_representation::ComputeVertexNormals(new_vertices,new_faces,&new_normals);
 
 }
+
+
+//-----------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------------------
+
+
+
+
+//-----------------------------------------------------------------------------------------------
+// -------------------------------- Quadric error metrics ---------------------------------------
+//-----------------------------------------------------------------------------------------------
 
 
 
@@ -464,10 +481,149 @@ void ex2::computeQuadric(){
 
 
 
+//-----------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------------------
+
+
+
+//-----------------------------------------------------------------------------------------------
+// --------------------------- Shape preserving algorithm ---------------------------------------
+//-----------------------------------------------------------------------------------------------
+
+
+//Gives the direction of the normal: 1 for + and 0 for -
+int ex2::cellnorm(int id){
+
+    Eigen::Vector3f n(mesh_->normals_[id*3],mesh_->normals_[id*3+1],mesh_->normals_[id*3+2]);
+
+    Eigen::Vector3f sign(0,0,0);
+
+
+    if(n[0]>=0)  // x
+       sign[0]=1;
+
+    if(n[1]>=0)  // y
+       sign[1]=1;
+
+    if(n[2]>=0) // z
+       sign[2]=1;
+
+
+    //Return nb of cell (from binary)
+    return 4*sign[2]+2*sign[1]+sign[0];
+
+}
+
+
+
+void ex2::computeGridShape(int level){
+
+
+    new_vertices.clear();
+    new_faces.clear();
+    new_normals.clear();
+
+
+    dimx=((mesh_->max_[0])-(mesh_->min_[0]));
+    dimy=((mesh_->max_[1])-(mesh_->min_[1]));
+    dimz=((mesh_->max_[2])-(mesh_->min_[2]));
+
+    nb_cells=level*level*level;
+
+
+    //Each cell is divided into 8
+    std::vector<std::vector<int>> grid(nb_cells*8);
+
+    for (int i=0; i<((int) mesh_->vertices_.size()/3);i++){
+        //std::cout << cellnorm(i) << std::endl;
+        grid[cellid(i,level)*8+cellnorm(i)].push_back(i);
+
+    }
+
+    //Store the new id of the vertices
+    std::vector<float> id_vertices((int) (mesh_->vertices_.size())/3);
+
+    int iter=0;
+
+    //Compute the vertex mean in each cell
+    for(int i=0; i<(nb_cells*8);i++){
+
+        float sumx=0.;
+        float sumy=0.;
+        float sumz=0.;
+        int nb_vertices = grid[i].size();
+
+
+        if(nb_vertices!=0){
+
+            // Sum all the coordinates of all the vertices in the cell
+            for (int j=0; j<nb_vertices;j++)
+            {
+                sumx+=mesh_->vertices_[grid[i][j]*3];
+                sumy+=mesh_->vertices_[grid[i][j]*3+1];
+                sumz+=mesh_->vertices_[grid[i][j]*3+2];
+                id_vertices[grid[i][j]]=iter;
+
+            }
+
+            //Divide by number of vertices
+            sumx=sumx/nb_vertices;
+            sumy=sumy/nb_vertices;
+            sumz=sumz/nb_vertices;
+
+            //Add the new vertex to the list of new vertices
+            new_vertices.push_back(sumx);
+            new_vertices.push_back(sumy);
+            new_vertices.push_back(sumz);
+
+            iter+=1;
+
+
+         }
+
+
+    }
+
+
+
+    //Compute the faces - loop on all faces
+    for (int i=0; i<((int) (mesh_->faces_.size())/3);i++){
+
+        //We get the vertices of the previous triangles
+        int a = mesh_->faces_[3*i];
+        int b = mesh_->faces_[3*i+1];
+        int c = mesh_->faces_[3*i+2];
+
+        //ID of the cell to which the vertices belong
+        int ida = id_vertices[a];
+        int idb = id_vertices[b];
+        int idc = id_vertices[c];
+
+
+        //Check if the vertices belong to the same cell before adding the new face
+        if (!(ida == idb || ida==idc || idb==idc))
+        {
+
+            //Replace vertex indices by the index of the cell vertex
+            new_faces.push_back(ida);
+            new_faces.push_back(idb);
+            new_faces.push_back(idc);
+
+
+        }
+
+
+    }
+
+     data_representation::ComputeVertexNormals(new_vertices,new_faces,&new_normals);
+
+}
 
 
 
 
+//-----------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------------------
 
 
 
@@ -492,15 +648,18 @@ void ex2::initVertexBuffer()
     }
 
 
-    if(LODsimpleON||QuadricON){
+    if(LODsimpleON||QuadricON||ShapeON){
 
         if(LODsimpleON)
             computeGrid(level);
         else{
-            computeQuadric();
+            if(ShapeON)
+                computeGridShape(level);
+            else{
+                if(QuadricON)
+                    computeQuadric();
+            }
         }
-
-        //computeGrid();
 
         //Vertex positions
         glBindBuffer(GL_ARRAY_BUFFER,vboVertex);
@@ -553,6 +712,10 @@ void ex2::initVertexBuffer()
 
 
 
+//-----------------------------------------------------------------------------------------------
+// ------------------------------------ Control Panel -------------------------------------------
+//-----------------------------------------------------------------------------------------------
+
 
 
 QGroupBox* ex2::controlPanel()
@@ -568,12 +731,12 @@ QGroupBox* ex2::controlPanel()
     QButtonGroup *buttonGroup = new QButtonGroup;
     QRadioButton *LODoff = new QRadioButton("Normal");
     QRadioButton *OnBasic = new QRadioButton("LOD Basic");
-    QRadioButton *OnAdvanced = new QRadioButton("LOD Octree");
+    QRadioButton *OnShape = new QRadioButton("LOD Shape Preserving");
     QRadioButton *OnQuadric = new QRadioButton("LOD Quadric");
     LODoff -> setChecked(true);
     buttonGroup -> addButton(LODoff);
     buttonGroup -> addButton(OnBasic);
-    buttonGroup -> addButton(OnAdvanced);
+    buttonGroup -> addButton(OnShape);
     buttonGroup -> addButton(OnQuadric);
 
 
@@ -601,6 +764,7 @@ QGroupBox* ex2::controlPanel()
     connect(LODoff,SIGNAL(toggled(bool)),this,SLOT(setOFF()));
     connect(OnBasic,SIGNAL(toggled(bool)),this,SLOT(setOnBasic()));
     connect(OnQuadric,SIGNAL(toggled(bool)),this,SLOT(setOnQuadric()));
+    connect(OnShape,SIGNAL(toggled(bool)),this,SLOT(setOnShape()));
     connect(this,SIGNAL(SetVertices(QString)),v_count,SLOT(setText(QString)));
     connect(this,SIGNAL(SetFaces(QString)),f_count,SLOT(setText(QString)));
 
@@ -611,7 +775,7 @@ QGroupBox* ex2::controlPanel()
     layout->addWidget(LODoff,row,0,1,2);
     layout->addWidget(OnBasic,row,1);
     row++;
-    layout->addWidget(OnAdvanced,row,0);
+    layout->addWidget(OnShape,row,0);
     layout->addWidget(OnQuadric,row,1);
     row++;
 
@@ -640,8 +804,15 @@ QGroupBox* ex2::controlPanel()
 
 
 
+
+//-----------------------------------------------------------------------------------------------
+// -------------------------------------- SLOTS -------------------------------------------------
+//-----------------------------------------------------------------------------------------------
+
+
+
 void ex2::setNumberlod(int n){
-    if(LODsimpleON||QuadricON){
+    if(LODsimpleON||QuadricON||ShapeON){
         level=n;
         initializeGL();
         initVertexBuffer();
@@ -652,6 +823,8 @@ void ex2::setNumberlod(int n){
 void ex2::setOFF(){
     LODsimpleON=false;
     QuadricON=false;
+    ShapeON=false;
+    initializeGL();
     initVertexBuffer();
     paintGL();
 }
@@ -659,6 +832,8 @@ void ex2::setOFF(){
 void ex2::setOnBasic(){
     LODsimpleON=true;
     QuadricON=false;
+    ShapeON=false;
+    initializeGL();
     initVertexBuffer();
     paintGL();
 }
@@ -666,7 +841,19 @@ void ex2::setOnBasic(){
 void ex2::setOnQuadric(){
     QuadricON=true;
     LODsimpleON=false;
+    ShapeON=false;
     computeQ();
+    initializeGL();
     initVertexBuffer();
     paintGL();
 }
+
+void ex2::setOnShape(){
+    QuadricON=false;
+    LODsimpleON=false;
+    ShapeON=true;
+    initializeGL();
+    initVertexBuffer();
+    paintGL();
+}
+

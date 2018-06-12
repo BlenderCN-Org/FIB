@@ -29,6 +29,8 @@ public:
     void            computeQuadric();
     int             cellid(int v, int l);
 
+    int             cellnorm(int id);
+    void            computeGridShape(int level);
 
     void            computeQ();
 
@@ -44,6 +46,7 @@ public:
 
     bool            LODsimpleON=false;
     bool            QuadricON=false;
+    bool            ShapeON=false;
 
 
 protected:
@@ -59,6 +62,7 @@ public slots:
     void setOFF();
     void setOnBasic();
     void setOnQuadric();
+    void setOnShape();
 
 
 };
