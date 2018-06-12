@@ -230,6 +230,8 @@ QGroupBox* ex1::controlPanel()
     layout->addWidget(line2,row,0, 1 ,layout->columnCount());
     row++;
 
+    layout->setRowStretch(row,1);
+
 
     return(groupBox);
 

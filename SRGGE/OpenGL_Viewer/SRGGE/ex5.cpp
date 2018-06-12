@@ -771,7 +771,7 @@ QGroupBox* ex5::controlPanel()
     layout->addWidget(Load,row,0);
     row++;
 
-    groupBox->setLayout(layout);
+    layout->setRowStretch(row,1);
 
     return(groupBox);
 

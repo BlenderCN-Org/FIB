@@ -760,6 +760,7 @@ QGroupBox* ex2::controlPanel()
     auto layout = dynamic_cast<QGridLayout*>(groupBox->layout());
     int row = layout->rowCount() + 1;
 
+    //SIGNALS
     connect(num_div, SIGNAL(valueChanged(int)),this,SLOT(setNumberlod(int)));
     connect(LODoff,SIGNAL(toggled(bool)),this,SLOT(setOFF()));
     connect(OnBasic,SIGNAL(toggled(bool)),this,SLOT(setOnBasic()));
@@ -769,8 +770,7 @@ QGroupBox* ex2::controlPanel()
     connect(this,SIGNAL(SetFaces(QString)),f_count,SLOT(setText(QString)));
 
 
-    //Layout
-
+    //LAYOUT
     row++;
     layout->addWidget(LODoff,row,0,1,2);
     layout->addWidget(OnBasic,row,1);
@@ -797,6 +797,7 @@ QGroupBox* ex2::controlPanel()
     layout->addWidget(f_count,row,1);
     row++;
 
+    layout->setRowStretch(row,1);
 
     return(groupBox);
 

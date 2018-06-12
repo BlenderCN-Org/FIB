@@ -100,7 +100,7 @@ void ex4::computeVFN(){
 
 
 //Find the index of the model that has the lowest difference of cost when we reduce its LOD
-std::vector<int> ex4::findID(Eigen::Matrix4f view, Eigen::Matrix4f model, Eigen::MatrixXd Levels){
+std::vector<int> ex4::findIDmin(Eigen::Matrix4f view, Eigen::Matrix4f model){
 
     int n = Levels.rows();
 
@@ -134,8 +134,45 @@ std::vector<int> ex4::findID(Eigen::Matrix4f view, Eigen::Matrix4f model, Eigen:
 }
 
 
+
+//Find the index of the model that is the best to increment
+std::vector<int> ex4::findIDmax(Eigen::Matrix4f view, Eigen::Matrix4f model){
+
+    int n = Levels.rows();
+
+    float maxCost = 0;
+    std::vector<int> index(2,0);
+    index[0]=-1;
+    index[1]=-1;
+
+    for(int i=0; i<n; i++){
+        for(int j=0; j<n; j++){
+            if(Levels(i,j)>=0 && Levels(i,j)<4){
+                if(index[0]==-1){  //First time in the loop : minimum = first value
+                    maxCost=computeIndivCost(view, model, i,j,Levels(i,j))-computeIndivCost(view, model, i,j,Levels(i,j)+1);
+                    index[0]=i;
+                    index[1]=j;
+                }
+                else{
+                    //Compute the difference between the cost of the model at the actual level and the cost of the model at the level+1
+                    float diff = computeIndivCost(view, model, i,j,Levels(i,j))-computeIndivCost(view, model, i,j,Levels(i,j)+1);
+                    if(diff>maxCost){
+                        maxCost = diff;
+                        index[0]=i;
+                        index[1]=j;
+                    }
+                }
+            }
+        }
+    }
+
+    return index;
+}
+
+
+
 //Count the nb of triangles of all the generated models -> control the fps value
-int ex4::totTriangles(Eigen::MatrixXd Levels){
+void ex4::totTriangles(){
 
     int num_faces_0 = F[0].size()/3;
     int num_faces_1 = F[1].size()/3;
@@ -160,28 +197,143 @@ int ex4::totTriangles(Eigen::MatrixXd Levels){
                 tot+=num_faces_4;
         }
     }
-    return tot;
+
+    nb_triangles = tot;
+
 }
 
 
 //Computes the list of LOD for each NxN models
-Eigen::MatrixXd ex4::computeLevels(Eigen::Matrix4f view, Eigen::Matrix4f model, Eigen::MatrixXd Levels){
+void ex4::computeLevels(Eigen::Matrix4f view, Eigen::Matrix4f model){
+
+    totTriangles();
 
     //While the nb of triangles is bigger than 5 000 000 to assure a framerate of 60fps
-    while(totTriangles(Levels)>5000000 && Levels!=Eigen::MatrixXd::Zero(copies,copies)){
+    if(nb_triangles>5000000 && Levels!=Eigen::MatrixXd::Zero(copies,copies)){
 
-        std::vector<int> index = findID(view, model, Levels);  //Find the model with the smallest cost
+        std::vector<int> index = findIDmin(view, model);  //Find the model with the smallest cost
         int Row = index[0];
         int Col = index[1];
 
+        if(Row==-1 || Col==-1)
+            return;
+
         if(Levels(Row,Col)!=0){
             Levels(Row,Col)-=1;  //If the model is not already minimum then decrease it
-            totTriangles(Levels);  //Update the total numbers of triangles
+            totTriangles();  //Update the total numbers of triangles
+        }
+
+
+    }
+
+    else{
+
+        std::vector<int> index = findIDmax(view, model);  //Find the model with the smallest cost
+        int Row = index[0];
+        int Col = index[1];
+
+        if(Row==-1 || Col==-1)
+            return;
+
+        if(Levels(Row,Col)!=4){
+            Levels(Row,Col)+=1;  //If the model is not already minimum then decrease it
+            totTriangles();
+        }
+
+    }
+
+}
+
+
+
+//-----------------------------------------------------------------------------------------------
+// -------------------------------- Advanced - hysteresis ---------------------------------------
+//-----------------------------------------------------------------------------------------------
+
+
+std::vector<int> ex4::IDAdvanced(Eigen::Matrix4f view, Eigen::Matrix4f model, int frame){
+
+    int n = Levels.rows();
+
+    float minCost = 0;
+    std::vector<int> index(2,0);
+    index[0]=-1;
+    index[1]=-1;
+
+    for(int i=0; i<n; i++){
+        for(int j=0; j<n; j++){
+            if(Levels(i,j)>0){
+                if(index[0]==-1){  //First time in the loop : minimum = first value
+                    minCost=computeIndivCost(view, model, i,j,Levels(i,j)-1)-computeIndivCost(view, model, i,j,Levels(i,j));
+                    index[0]=i;
+                    index[1]=j;
+                }
+                else{
+                    //Compute the difference between the cost of the model at the actual level and the cost of the model at the level-1
+                    float diff = computeIndivCost(view, model, i,j,Levels(i,j)-1)-computeIndivCost(view, model, i,j,Levels(i,j));
+                    if(diff<minCost && frame-Model_Frames(i,j)>10){
+                        if(Model_Frames(i,j)!=0){
+                            std::cout << "here" << std::endl;
+                        }
+                        minCost = diff;  //Find the smallest cost
+                        index[0]=i;  //Keep the index of the model with the smallest cost (i,j) between the NxN models displayed
+                        index[1]=j;
+                    }
+                }
+            }
         }
     }
 
-    return Levels;
+    return index;
 }
+
+
+
+
+//Computes the list of LOD for each NxN models with freezing changes of models for 10 frames
+void ex4::computeAdvanced(Eigen::Matrix4f view, Eigen::Matrix4f model,int frame){
+
+    totTriangles();
+
+    //While the nb of triangles is bigger than 5 000 000 to assure a framerate of 60fps
+    if(nb_triangles>5000000 && Levels!=Eigen::MatrixXd::Zero(copies,copies)){
+
+        std::vector<int> index = findIDmin(view, model);  //Find the model with the smallest cost
+        int Row = index[0];
+        int Col = index[1];
+
+        if(Row==-1 || Col==-1)
+            return;
+
+        if(Levels(Row,Col)!=0 && frame-Model_Frames(Row,Col)>10){
+            Levels(Row,Col)-=1;  //If the model is not already minimum then decrease it
+            totTriangles();  //Update the total numbers of triangles
+            Model_Frames(Row,Col)=frame;  //Save last update of the model
+        }
+
+
+    }
+
+    else{
+
+        std::vector<int> index = findIDmax(view, model);  //Find the model with the smallest cost
+        int Row = index[0];
+        int Col = index[1];
+
+        if(Row==-1 || Col==-1)
+            return;
+
+        if(Levels(Row,Col)!=4 && frame-Model_Frames(Row,Col)>10){
+            Levels(Row,Col)+=1;  //If the model is not already minimum then decrease it
+            totTriangles();
+            Model_Frames(Row,Col)=frame;  //Save last update of the model
+        }
+
+    }
+
+
+}
+
 
 
 
@@ -218,8 +370,16 @@ void ex4::paintGL()
 
         float size=2*mesh_->max_[0];
 
-        Levels=4*Eigen::MatrixXd::Ones(copies,copies);
-        Levels=computeLevels(view, model, Levels);
+
+        //Levels=4*Eigen::MatrixXd::Ones(copies,copies);
+        //Model_Frames=Eigen::MatrixXd::Zero(copies,copies);
+
+        if(!AdvancedON)
+            computeLevels(view, model);
+        else
+            computeAdvanced(view,model,count_frames);
+
+
 
         for(int i =0; i<copies; i++){
 
@@ -292,6 +452,7 @@ void ex4::paintGL()
     //Set Framerate
 
     frames++;
+    count_frames++;
     final_time=time(NULL);
     if(final_time-initial_time>0)
     {
@@ -473,6 +634,28 @@ QGroupBox* ex4::controlPanel()
     QGroupBox *groupBox = ex1::controlPanel();
     groupBox->setStyleSheet(GroupBoxStyle);
 
+    QButtonGroup *buttonGroup = new QButtonGroup;
+    QRadioButton *Basic = new QRadioButton("Basic");
+    QRadioButton *Advanced = new QRadioButton("Advanced");
+    Basic -> setChecked(true);
+    buttonGroup -> addButton(Basic);
+    buttonGroup -> addButton(Advanced);
+
+    //SIGNALS
+    connect(Basic,SIGNAL(toggled(bool)),this,SLOT(setAdvancedOFF()));
+    connect(Advanced,SIGNAL(toggled(bool)),this,SLOT(setAdvancedON()));
+
+
+    //LAYOUT
+    auto layout = dynamic_cast<QGridLayout*>(groupBox->layout());
+    int row = layout->rowCount() + 1;
+
+    row++;
+    layout->addWidget(Basic,row,0);
+    layout->addWidget(Advanced,row,1);
+    row++;
+    layout->setRowStretch(row,1);
+
 
     return(groupBox);
 
@@ -485,6 +668,26 @@ void ex4::setNumberCopies(int N)
 {
     copies=N;
     Levels=4*Eigen::MatrixXd::Ones(copies,copies);
+    Model_Frames=Eigen::MatrixXd::Zero(copies,copies);
+    //count_frames=0;
     paintGL();
 }
 
+
+void ex4::setAdvancedON()
+{
+    AdvancedON=true;
+    //count_frames=0;
+    Levels=4*Eigen::MatrixXd::Ones(copies,copies);
+    Model_Frames=Eigen::MatrixXd::Zero(copies,copies);
+    paintGL();
+}
+
+void ex4::setAdvancedOFF()
+{
+    AdvancedON=false;
+    //count_frames=0;
+    Levels=4*Eigen::MatrixXd::Ones(copies,copies);
+    Model_Frames=Eigen::MatrixXd::Zero(copies,copies);
+    paintGL();
+}

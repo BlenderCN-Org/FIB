@@ -28,12 +28,21 @@ public:
     QGroupBox*                              controlPanel();
 
     float                                   computeIndivCost(Eigen::Matrix4f view, Eigen::Matrix4f model, int i, int j, int L);
-    Eigen::MatrixXd                         computeLevels(Eigen::Matrix4f view, Eigen::Matrix4f model, Eigen::MatrixXd Levels);
+    void                                    computeLevels(Eigen::Matrix4f view, Eigen::Matrix4f model);
+    void                                    computeAdvanced(Eigen::Matrix4f view, Eigen::Matrix4f model, int frames);
     void                                    computeVFN();
-    int                                     totTriangles(Eigen::MatrixXd Levels);
-    std::vector<int>                        findID(Eigen::Matrix4f view, Eigen::Matrix4f model, Eigen::MatrixXd Cost);
+    void                                    totTriangles();
 
-    Eigen::MatrixXd Levels;
+    std::vector<int>                        findIDmin(Eigen::Matrix4f view, Eigen::Matrix4f model);
+    std::vector<int>                        findIDmax(Eigen::Matrix4f view, Eigen::Matrix4f model);
+
+    int                                     nb_triangles;
+
+    std::vector<int>                        IDAdvanced(Eigen::Matrix4f view, Eigen::Matrix4f model, int frames);
+
+    Eigen::MatrixXd                         Levels;
+    Eigen::MatrixXd                         Model_Frames;
+
 
     std::vector<std::vector<float>>         V;
     std::vector<std::vector<int>>           F;
@@ -47,9 +56,13 @@ public:
     GLuint                                  vboVertex3, vboNormal3, vboIndex3;
     GLuint                                  vboVertex4, vboNormal4, vboIndex4;
 
+    bool                                    AdvancedON=false;
+
 
 public slots:
     void setNumberCopies(int);
+    void setAdvancedON();
+    void setAdvancedOFF();
 
 
 };

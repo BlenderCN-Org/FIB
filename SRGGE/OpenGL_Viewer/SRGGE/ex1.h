@@ -27,15 +27,11 @@ public:
     GLuint          depthrenderbuffer;
     int             copies=1;
 
-    QElapsedTimer   t_Timer;
-    double          lastTime;
-    int             nbFrames=0;
-
     Shader          *gShader;
 
     QLabel          *print_fps;
 
-    int final_time, initial_time=time(NULL), frames=0;
+    int final_time, initial_time=time(NULL), frames=0, count_frames=0;
 
 
 protected:
