@@ -335,9 +335,6 @@ void ex4::paintGL()
         float size=2*mesh_->max_[0];
 
 
-        //Levels=4*Eigen::MatrixXd::Ones(copies,copies);
-        //Model_Frames=Eigen::MatrixXd::Zero(copies,copies);
-
         if(!AdvancedON)
             computeLevels(view, model);
         else

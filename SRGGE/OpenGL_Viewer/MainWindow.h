@@ -18,7 +18,7 @@
 #include <algorithm>
 #include "HW.h"
 
-enum {DUMMY, FRR1, FRR2, SRGGE1, SRGGE2, SRGGE3, SRGGE4};
+enum {DUMMY, FRR1, FRR2, SRGGE1, SRGGE2, SRGGE3, SRGGE4, SRGGE5};
 
 
 typedef std::map<QString, HW*> hw_type;
@@ -67,6 +67,8 @@ private:
     QAction		*m_actionSRGGE2;
     QAction     *m_actionSRGGE3;
     QAction     *m_actionSRGGE4;
+    QAction     *m_actionSRGGE5;
+
 
 
 };

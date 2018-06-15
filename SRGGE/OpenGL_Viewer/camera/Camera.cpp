@@ -39,7 +39,9 @@ Camera::Camera()
       scaling_(1.0f),
       field_of_view_(0.0f),
       z_near_(0.0f),
-      z_far_(0.0f) {}
+      z_far_(0.0f),
+      camera_y(0.5f),
+      walkingON(false){}
 
 void Camera::SetViewport(double x, double y, double w, double h) {
   viewport_x_ = x;
@@ -69,13 +71,24 @@ Eigen::Matrix4f Camera::SetModel() const {
   return kScaling.matrix() * kTranslation.matrix();
 }
 
+
 Eigen::Matrix4f Camera::SetView() const {
-  const Eigen::Affine3f kTranslation(
+   const Eigen::Affine3f kTranslation(
       Eigen::Translation3f(Eigen::Vector3f(pan_x_, pan_y_, -distance_)));
+
+  const Eigen::Affine3f kTranslationWalking(
+        Eigen::Translation3f(Eigen::Vector3f(pan_x_, camera_y, -distance_)));
+
   const Eigen::Affine3f kRotationA(Eigen::AngleAxisf(rotation_x_, hra));
   const Eigen::Affine3f kRotationB(Eigen::AngleAxisf(rotation_y_, vra));
 
-  return kTranslation.matrix() * kRotationA.matrix() * kRotationB.matrix();
+  if(walkingON){
+      return kRotationA.matrix() * kRotationB.matrix() * kTranslationWalking.matrix();
+   }
+   else{
+      return kTranslation.matrix() * kRotationA.matrix() * kRotationB.matrix();
+  }
+
 }
 
 Eigen::Matrix4f Camera::SetProjection(double fov, double znear, double zfar) {
@@ -201,14 +214,58 @@ double Camera::GetHeight(){
 
 
 void Camera::MoveH(double modifier){
-    pan_x_ += modifier;
+
+    if(walkingON){
+        pan_x_ += (float)cos(rotation_y_)*modifier;
+        distance_ -= (float)sin(rotation_y_)*modifier;
+    }
+    else
+        pan_x_ -= modifier;
+
     SetView();
 }
 
 
 void Camera::MoveV(double modifier){
-    pan_y_ += modifier;
+
+    if(walkingON){
+        pan_x_ -= (float)sin(rotation_y_)*modifier;
+        distance_ -= (float)cos(rotation_y_)*modifier;
+        pan_y_ -= (float)sin(rotation_x_)*modifier;
+    }
+    else
+        pan_y_ += modifier;
+
     SetView();
+}
+
+
+void Camera::UpDown(double modifier){
+    camera_y += modifier;
+    SetView();
+}
+
+void Camera::MoveX(double modifier) {
+  rotation_x_ += AngleIncrement * modifier;
+}
+
+void Camera::MoveY(double modifier) {
+  rotation_y_ += AngleIncrement * modifier;
+}
+
+
+
+
+
+void Camera::setWalking()
+{
+    walkingON = true;
+}
+
+
+Eigen::Vector2f Camera::GetPosition()
+{
+    return Eigen::Vector2f((float)pan_x_, (float)-distance_);
 }
 
 

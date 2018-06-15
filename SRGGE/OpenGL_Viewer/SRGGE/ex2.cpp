@@ -229,6 +229,7 @@ void ex2::computeGrid(int level){
     new_normals.clear();
 
 
+    //Dimensions of the mesh
     dimx=((mesh_->max_[0])-(mesh_->min_[0]));
     dimy=((mesh_->max_[1])-(mesh_->min_[1]));
     dimz=((mesh_->max_[2])-(mesh_->min_[2]));
@@ -240,7 +241,6 @@ void ex2::computeGrid(int level){
 
     //Put each vertex into the cell it is contained in
     std::vector<std::vector<int>> grid(nb_cells);
-
     for (int i=0; i<((int) mesh_->vertices_.size()/3);i++){
         grid[cellid(i,level)].push_back(i);
 
@@ -321,6 +321,7 @@ void ex2::computeGrid(int level){
 
     }
 
+    //Compute the normals
      data_representation::ComputeVertexNormals(new_vertices,new_faces,&new_normals);
 
 }
@@ -337,7 +338,7 @@ void ex2::computeGrid(int level){
 //-----------------------------------------------------------------------------------------------
 
 
-
+//For each vertex, compute the Q matrix and store it in QMatrices
 void ex2::computeQ()
 {
 
@@ -347,12 +348,15 @@ void ex2::computeQ()
 
         // Vertex v
        Eigen::Vector3d v(mesh_->vertices_[id*3],mesh_->vertices_[id*3+1],mesh_->vertices_[id*3+2]);
-
+        // Normal vector
        Eigen::Vector3d normal(mesh_->normals_[id*3],mesh_->normals_[id*3+1],mesh_->normals_[id*3+2]);
+        // Normal vector with -n.v as last coordinate
        Eigen::Vector4d pv(normal[0],normal[1],normal[2],-normal.dot(v));
 
+       //Compute the Q matrix of the vertex
        Eigen::Matrix4d Qv = pv * pv.transpose();
 
+       //Add it to QMatrices vector
        QMatrices.push_back(Qv);
 
    }
@@ -391,7 +395,7 @@ void ex2::computeQuadric(){
 
     int iter=0;
 
-    //Compute the Q matrix in each cell
+    //Compute the new vertex in each cell
     for(int i=0; i<nb_cells;i++){
 
         int nb_vertices = grid[i].size();
@@ -399,25 +403,28 @@ void ex2::computeQuadric(){
 
         if(nb_vertices!=0){
 
-            // Sum all the coordinates of all the vertices in the cell
+            //Compute the Q matrix in each cell
+            // Sum all the Q matrices of the vertices in the cell
             for (int j=0; j<nb_vertices;j++)
             {
                 Q+=QMatrices[grid[i][j]];
-                id_vertices[grid[i][j]]=iter;
-
+                id_vertices[grid[i][j]]=iter;   //Attributes the new id of the vertices (id of the new vertex in the new_vertices list)
             }
 
 
-            //Compute the new vertex from the matrix
+            //Add a new line to Q to perform the inverse and the multiplication by a Vector4f
             Q.row(3) << 0, 0, 0, 1;
 
+            //Inverse Q
             Eigen::Matrix4d inverse;
             bool invertible;
             Q.computeInverseWithCheck(inverse,invertible,0.1);
 
+            //Creation of new vector
             Eigen::Vector4d new_V;
 
             if(invertible){
+                //If Q is invertible, we compute it by using the formula
                 new_V = inverse * Eigen::Vector4d(0,0,0,1);
 
                 //Add the new vertex to the list of new vertices
@@ -429,6 +436,7 @@ void ex2::computeQuadric(){
 
             else{
 
+                //If Q is not invertible, we take the first vertex in the cell (we could take the mean also)
                 new_vertices.push_back(mesh_->vertices_[grid[i][0]*3]);
                 new_vertices.push_back(mesh_->vertices_[grid[i][0]*3+1]);
                 new_vertices.push_back(mesh_->vertices_[grid[i][0]*3+2]);
@@ -438,9 +446,7 @@ void ex2::computeQuadric(){
 
             iter+=1;
 
-
          }
-
 
     }
 
@@ -474,6 +480,7 @@ void ex2::computeQuadric(){
 
     }
 
+    //Compute the normals
      data_representation::ComputeVertexNormals(new_vertices,new_faces,&new_normals);
 
 
@@ -535,8 +542,7 @@ void ex2::computeGridShape(int level){
     std::vector<std::vector<int>> grid(nb_cells*8);
 
     for (int i=0; i<((int) mesh_->vertices_.size()/3);i++){
-        //std::cout << cellnorm(i) << std::endl;
-        grid[cellid(i,level)*8+cellnorm(i)].push_back(i);
+        grid[cellid(i,level)*8+cellnorm(i)].push_back(i); //Add the value of the binary number given in cellnorm
 
     }
 

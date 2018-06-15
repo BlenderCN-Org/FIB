@@ -133,6 +133,10 @@ class Camera {
    */
   double z_far_;
 
+  double camera_y;
+  bool   walkingON;
+
+
  public:
   /**
    * @brief Camera Constructor of the class.
@@ -302,12 +306,18 @@ class Camera {
    */
   void SetCameraStep(double step);
 
+  void setWalking();
+
   double GetWidth(void);
   double GetHeight(void);
 
-
   void MoveH(double modifier);
   void MoveV(double modifier);
+  void UpDown(double modifier);
+  void MoveX(double modifier);
+  void MoveY(double modifier);
+
+  Eigen::Vector2f GetPosition();
 
 
 };

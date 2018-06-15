@@ -42,7 +42,6 @@ void ex1::initializeGL()
 void ex1::paintGL()
 {
 
-
     // Render to our framebuffer
     glViewport(0,0,width_,height_); // Render on the whole framebuffer
     glClearColor(1.0f,1.0f,1.0f,1.0f);
@@ -72,22 +71,23 @@ void ex1::paintGL()
         float size=2*mesh_->max_[0];
 
 
+        //Create copies copies of the model
         for(int i =0; i<copies; i++){
 
             for(int j=0; j<copies; j++){
 
-                //Translation
+                //Translation to place the models in different positions
                 Eigen::Affine3f t(Eigen::Translation3f(Eigen::Vector3f((-copies/2*size)+2*size*float(i),0,(-copies/2*size)+2*size*float(j))));
                 Eigen::Matrix4f m = t.matrix();
                 model = model * m;
 
+                //Send matrices to the shader
                 gShader->setMat4("u_projection",projection);
                 gShader->setMat4("u_view",view);
                 gShader->setMat4("u_model",model);
                 gShader->setMat3("u_normal_matrix",normal);
 
                 //Display
-
                 glBindBuffer(GL_ARRAY_BUFFER,vboVertex);
                 glEnableVertexAttribArray(ATTRIB_VERTEX);
                 glVertexAttribPointer(ATTRIB_VERTEX, 3, GL_FLOAT, GL_FALSE, 0, NULL);
@@ -120,7 +120,6 @@ void ex1::paintGL()
 
 
     //Set Framerate
-
     frames++;
     final_time=time(NULL);
     if(final_time-initial_time>0)

@@ -18,6 +18,9 @@ ex5::ex5(const QGLFormat &glf, QWidget *parent) : Viewer1(glf, parent)
 void ex5::initializeGL()
 {
 
+
+    camera_.setWalking();
+
     // initialize GL function resolution for current context
     initializeGLFunctions();
     initVertexBuffer();

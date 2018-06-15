@@ -45,7 +45,8 @@ HEADERS +=	MainWindow.h		\
     SRGGE/ex1.h \
     SRGGE/ex2.h \
     SRGGE/ex4.h \
-    SRGGE/ex5.h
+    SRGGE/ex5.h \
+    SRGGE/ex6.h
 		
 SOURCES +=	main.cpp		\ 
 		MainWindow.cpp 		\
@@ -61,7 +62,8 @@ SOURCES +=	main.cpp		\
     SRGGE/ex1.cpp \
     SRGGE/ex2.cpp \
     SRGGE/ex4.cpp \
-    SRGGE/ex5.cpp
+    SRGGE/ex5.cpp \
+    SRGGE/ex6.cpp
 
 
 DISTFILES += \

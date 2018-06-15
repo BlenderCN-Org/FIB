@@ -53,7 +53,6 @@ public:
 
 
     std::vector<std::vector<int>>   museum;
-//    std::vector<std::unique_ptr<data_representation::TriangleMesh>> mesh;
 
     std::vector<std::vector<float>>         V;
     std::vector<std::vector<int>>           F;
