@@ -42,131 +42,40 @@ void ex4::initializeGL()
 
 
 
-float ex4::computeIndivCost(Eigen::Matrix4f view, Eigen::Matrix4f model, int i, int j, int L){
-
-    float size=2*mesh_->max_[0];
-
-    Eigen::Affine3f t(Eigen::Translation3f(Eigen::Vector3f((-copies/2*size)+2*size*float(i),0,(-copies/2*size)+2*size*float(j))));
-    Eigen::Matrix4f m = t.matrix();
-    model = model * m;
-
-    Eigen::Vector3f diag = mesh_->max_ - mesh_->min_; //Diagonal of bounding box
-    Eigen::Vector3f Center = diag/2; //Center of bounding box
-
-    Eigen::Vector4f viewCenter = view*model*Eigen::Vector4f(Center[0],Center[1],Center[2],1.0); //Change the center into view space to get the distance from the viewport
-    Eigen::Vector3f C(viewCenter[0],viewCenter[1],viewCenter[2]);
-
-    float d1 = diag.norm();  //diagonal d
-    float d2 = C.norm();  //distance D
-
-    //Compute value of cost
-    return d1/(pow(2,L)*d2);
-
-}
-
-
 
 //Store the 5 levels of details obtained with code of exercise 2
 void ex4::computeVFN(){
 
-    V.clear();
-    F.clear();
-    N.clear();
+    V.clear(); //Vector that stores the vertices
+    F.clear(); //Vector that stores the faces
+    N.clear(); //Vector that stores the normals
 
+    //First LOD = 8
     computeGrid(8);
     V.push_back(new_vertices);
     F.push_back(new_faces);
     N.push_back(new_normals);
+    //Second LOD = 16
     computeGrid(16);
     V.push_back(new_vertices);
     F.push_back(new_faces);
     N.push_back(new_normals);
+    //Third LOD = 32
     computeGrid(32);
     V.push_back(new_vertices);
     F.push_back(new_faces);
     N.push_back(new_normals);
+    //Fourth LOD = 64
     computeGrid(64);
     V.push_back(new_vertices);
     F.push_back(new_faces);
     N.push_back(new_normals);
-
+    //Fifth LOD : full model
     V.push_back(mesh_->vertices_);
     F.push_back(mesh_->faces_);
     N.push_back(mesh_->normals_);
 
 
-}
-
-
-
-//Find the index of the model that has the lowest difference of cost when we reduce its LOD
-std::vector<int> ex4::findIDmin(Eigen::Matrix4f view, Eigen::Matrix4f model){
-
-    int n = Levels.rows();
-
-    float minCost = 0;
-    std::vector<int> index(2,0);
-    index[0]=-1;
-    index[1]=-1;
-
-    for(int i=0; i<n; i++){
-        for(int j=0; j<n; j++){
-            if(Levels(i,j)>0){
-                if(index[0]==-1){  //First time in the loop : minimum = first value
-                    minCost=computeIndivCost(view, model, i,j,Levels(i,j)-1)-computeIndivCost(view, model, i,j,Levels(i,j));
-                    index[0]=i;
-                    index[1]=j;
-                }
-                else{
-                    //Compute the difference between the cost of the model at the actual level and the cost of the model at the level-1
-                    float diff = computeIndivCost(view, model, i,j,Levels(i,j)-1)-computeIndivCost(view, model, i,j,Levels(i,j));
-                    if(diff<minCost){
-                        minCost = diff;  //Find the smallest cost
-                        index[0]=i;  //Keep the index of the model with the smallest cost (i,j) between the NxN models displayed
-                        index[1]=j;
-                    }
-                }
-            }
-        }
-    }
-
-    return index;
-}
-
-
-
-//Find the index of the model that is the best to increment
-std::vector<int> ex4::findIDmax(Eigen::Matrix4f view, Eigen::Matrix4f model){
-
-    int n = Levels.rows();
-
-    float maxCost = 0;
-    std::vector<int> index(2,0);
-    index[0]=-1;
-    index[1]=-1;
-
-    for(int i=0; i<n; i++){
-        for(int j=0; j<n; j++){
-            if(Levels(i,j)>=0 && Levels(i,j)<4){
-                if(index[0]==-1){  //First time in the loop : minimum = first value
-                    maxCost=computeIndivCost(view, model, i,j,Levels(i,j))-computeIndivCost(view, model, i,j,Levels(i,j)+1);
-                    index[0]=i;
-                    index[1]=j;
-                }
-                else{
-                    //Compute the difference between the cost of the model at the actual level and the cost of the model at the level+1
-                    float diff = computeIndivCost(view, model, i,j,Levels(i,j))-computeIndivCost(view, model, i,j,Levels(i,j)+1);
-                    if(diff>maxCost){
-                        maxCost = diff;
-                        index[0]=i;
-                        index[1]=j;
-                    }
-                }
-            }
-        }
-    }
-
-    return index;
 }
 
 
@@ -203,9 +112,113 @@ void ex4::totTriangles(){
 }
 
 
-//Computes the list of LOD for each NxN models
+
+
+//Compute the cost of one model
+float ex4::computeIndivCost(Eigen::Matrix4f view, Eigen::Matrix4f model, int i, int j, int L){
+
+    //Size of the bounding box
+    float size=2*mesh_->max_[0];
+
+    //Transformation applied to the model matrix for the model i,j
+    Eigen::Affine3f t(Eigen::Translation3f(Eigen::Vector3f((-copies/2*size)+2*size*float(i),0,(-copies/2*size)+2*size*float(j))));
+    Eigen::Matrix4f m = t.matrix();
+    model = model * m;
+
+    Eigen::Vector3f diag = mesh_->max_ - mesh_->min_; //Diagonal of bounding box
+    Eigen::Vector3f Center = diag/2; //Center of bounding box
+
+    //Center of the bounding box in view space
+    Eigen::Vector4f viewCenter = view*model*Eigen::Vector4f(Center[0],Center[1],Center[2],1.0); //Change the center into view space to get the distance from the viewport
+    Eigen::Vector3f C(viewCenter[0],viewCenter[1],viewCenter[2]);
+
+    float d1 = diag.norm();  //diagonal d
+    float d2 = C.norm();  //distance D
+
+    //Compute value of cost
+    return d1/(pow(2,L)*d2);
+
+}
+
+
+
+//Find the index of the model that has the lowest difference of cost when we reduce its LOD
+std::vector<int> ex4::findIDmin(Eigen::Matrix4f view, Eigen::Matrix4f model){
+
+    int n = Levels.rows();
+
+    float minCost = 0;
+    std::vector<int> index(2,0);  //(i,j) out of NxN models
+    index[0]=-1;
+    index[1]=-1;
+
+    for(int i=0; i<n; i++){
+        for(int j=0; j<n; j++){
+            if(Levels(i,j)>0){ //Among the levels that can be decreased
+                if(index[0]==-1){  //First time in the loop : minimum = first value
+                    minCost=computeIndivCost(view, model, i,j,Levels(i,j)-1)-computeIndivCost(view, model, i,j,Levels(i,j));
+                    index[0]=i;
+                    index[1]=j;
+                }
+                else{
+                    //Compute the difference between the cost of the model at the actual level and the cost of the model at the level-1
+                    float diff = computeIndivCost(view, model, i,j,Levels(i,j)-1)-computeIndivCost(view, model, i,j,Levels(i,j));
+                    if(diff<minCost){
+                        minCost = diff;  //Find the smallest cost
+                        index[0]=i;  //Keep the index of the model with the smallest cost (i,j) between the NxN models displayed
+                        index[1]=j;
+                    }
+                }
+            }
+        }
+    }
+
+    return index;
+}
+
+
+
+//Find the index of the model that is the best to increment
+std::vector<int> ex4::findIDmax(Eigen::Matrix4f view, Eigen::Matrix4f model){
+
+    int n = Levels.rows();
+
+    float maxCost = 0;
+    std::vector<int> index(2,0);
+    index[0]=-1;
+    index[1]=-1;
+
+    for(int i=0; i<n; i++){
+        for(int j=0; j<n; j++){
+            if(Levels(i,j)>=0 && Levels(i,j)<4){ //Among the levels that can be increased
+                if(index[0]==-1){  //First time in the loop : maximum = first value
+                    maxCost=computeIndivCost(view, model, i,j,Levels(i,j))-computeIndivCost(view, model, i,j,Levels(i,j)+1);
+                    index[0]=i;
+                    index[1]=j;
+                }
+                else{
+                    //Compute the difference between the cost of the model at the actual level and the cost of the model at the level+1
+                    float diff = computeIndivCost(view, model, i,j,Levels(i,j))-computeIndivCost(view, model, i,j,Levels(i,j)+1);
+                    if(diff>maxCost){
+                        maxCost = diff;
+                        index[0]=i;
+                        index[1]=j;
+                    }
+                }
+            }
+        }
+    }
+
+    return index;
+}
+
+
+
+
+//Computes the list of LOD for each NxN models - find a model that can be increased / decreased at each call to the function
 void ex4::computeLevels(Eigen::Matrix4f view, Eigen::Matrix4f model){
 
+    //Compute the number of triangles displayed
     totTriangles();
 
     //While the nb of triangles is bigger than 5 000 000 to assure a framerate of 60fps
@@ -216,10 +229,10 @@ void ex4::computeLevels(Eigen::Matrix4f view, Eigen::Matrix4f model){
         int Col = index[1];
 
         if(Row==-1 || Col==-1)
-            return;
+            return;  //If there is no model that can be increased
 
         if(Levels(Row,Col)!=0){
-            Levels(Row,Col)-=1;  //If the model is not already minimum then decrease it
+            Levels(Row,Col)-=1;  //If the level is not already minimum then decrease it
             totTriangles();  //Update the total numbers of triangles
         }
 
@@ -228,7 +241,7 @@ void ex4::computeLevels(Eigen::Matrix4f view, Eigen::Matrix4f model){
 
     else{
 
-        std::vector<int> index = findIDmax(view, model);  //Find the model with the smallest cost
+        std::vector<int> index = findIDmax(view, model);  //Find the model with the biggest cost
         int Row = index[0];
         int Col = index[1];
 
@@ -236,7 +249,7 @@ void ex4::computeLevels(Eigen::Matrix4f view, Eigen::Matrix4f model){
             return;
 
         if(Levels(Row,Col)!=4){
-            Levels(Row,Col)+=1;  //If the model is not already minimum then decrease it
+            Levels(Row,Col)+=1;  //If the level is not already maximum then increase it
             totTriangles();
         }
 
@@ -269,7 +282,7 @@ void ex4::computeAdvanced(Eigen::Matrix4f view, Eigen::Matrix4f model,int frame)
         if(Row==-1 || Col==-1)
             return;
 
-        if(Levels(Row,Col)!=0 && frame-Model_Frames(Row,Col)>10){
+        if(Levels(Row,Col)!=0 && frame-Model_Frames(Row,Col)>10){  //If the level of the model was updated more than 10 frames ago
             Levels(Row,Col)-=1;  //If the model is not already minimum then decrease it
             totTriangles();  //Update the total numbers of triangles
             Model_Frames(Row,Col)=frame;  //Save last update of the model
@@ -297,6 +310,10 @@ void ex4::computeAdvanced(Eigen::Matrix4f view, Eigen::Matrix4f model,int frame)
 
 
 }
+
+
+
+//-----------------------------------------------------------------------------------------------
 
 
 
@@ -336,10 +353,9 @@ void ex4::paintGL()
 
 
         if(!AdvancedON)
-            computeLevels(view, model);
+            computeLevels(view, model);  //Compute basic algorithm
         else
-            computeAdvanced(view,model,count_frames);
-
+            computeAdvanced(view,model,count_frames);  //Compute hysteresis with the actual count of frames
 
 
         for(int i =0; i<copies; i++){
@@ -357,7 +373,7 @@ void ex4::paintGL()
                 gShader->setMat3("u_normal_matrix",normal);
 
                 //RENDER MODELS depending on the level of details they should have
-
+                //Send value of the LOD to the shader
                 if(Levels(i,j)==0){
                     gShader->setInt("level",Levels(i,j));
                     glBindVertexArray(vao0);
@@ -411,9 +427,8 @@ void ex4::paintGL()
 
 
     //Set Framerate
-
     frames++;
-    count_frames++;
+    count_frames++;  //Count 1 more frame per call
     final_time=time(NULL);
     if(final_time-initial_time>0)
     {
@@ -630,7 +645,6 @@ void ex4::setNumberCopies(int N)
     copies=N;
     Levels=4*Eigen::MatrixXd::Ones(copies,copies);
     Model_Frames=Eigen::MatrixXd::Zero(copies,copies);
-    //count_frames=0;
     paintGL();
 }
 
@@ -638,8 +652,8 @@ void ex4::setNumberCopies(int N)
 void ex4::setAdvancedON()
 {
     AdvancedON=true;
-    //count_frames=0;
     Levels=4*Eigen::MatrixXd::Ones(copies,copies);
+    //Initialize the last updated frame values
     Model_Frames=Eigen::MatrixXd::Zero(copies,copies);
     paintGL();
 }
@@ -647,7 +661,6 @@ void ex4::setAdvancedON()
 void ex4::setAdvancedOFF()
 {
     AdvancedON=false;
-    //count_frames=0;
     Levels=4*Eigen::MatrixXd::Ones(copies,copies);
     Model_Frames=Eigen::MatrixXd::Zero(copies,copies);
     paintGL();

@@ -15,13 +15,32 @@ ex6::ex6(const QGLFormat &glf, QWidget *parent) : ex5(glf, parent)
 
 
 
+//Select 2 different sides and gives the random coordinates of 2 points on each side to ray function
+void ex6::SelectSides(){
+
+    std::vector<std::vector<int>> Coords;
+    std::vector<int> S(2,0);
+
+    do{
+        S[0] = std::rand()%4;  //Random number between 0 & 4
+        S[1] = std::rand()%4;
+    } while(S[0]==S[1]);  //As long as the sides are the same, keep trying
+
+    Coords.push_back(ReturnCoords(S[0]));  //Compute the random coordinates on each side
+    Coords.push_back(ReturnCoords(S[1]));
+
+    Rays(Coords[0][0],Coords[0][1],Coords[1][0],Coords[1][1]); //Create the ray between the 2 points and create the visibility cells
+}
+
+
+
 
 
 //Select one side between 0 & 3 and return random coordinates on this side
 std::vector<int> ex6::ReturnCoords(int side){
 
-    int n=museum.size();
-    int m=museum[0].size();
+    int n=museum.size();  //Max size x
+    int m=museum[0].size();  //Max size y
     std::vector<int> x(2,0);
 
     //0 Up
@@ -54,26 +73,10 @@ std::vector<int> ex6::ReturnCoords(int side){
 
 
 
-//Select 2 different sides and gives the random coordinates of 2 points on each side to ray function
-void ex6::SelectSides(){
-
-    std::vector<std::vector<int>> Coords;
-    std::vector<int> S(2,0);
-
-    do{
-        S[0] = std::rand()%4;
-        S[1] = std::rand()%4;
-    } while(S[0]==S[1]);
-
-    Coords.push_back(ReturnCoords(S[0]));
-    Coords.push_back(ReturnCoords(S[1]));
-
-    Rays(Coords[0][0],Coords[0][1],Coords[1][0],Coords[1][1]);
-}
-
-
-
 void ex6::Rays(int x1, int y1, int x2, int y2){
+
+    visibility.clear();
+    last=false;
 
     int i;
     int ystep, xstep;
@@ -83,8 +86,7 @@ void ex6::Rays(int x1, int y1, int x2, int y2){
     int ddy, ddx;
     int dx = x2 - x1;
     int dy = y2 - y1;
-    visibility.clear();
-    last=false;
+
 
     //point 1
     addPoint(x1, y1);
@@ -171,7 +173,7 @@ void ex6::addPoint(int x, int y){
 
     //If we reach a wall, we create a new visibility set
     if(museum[x][y]==1 || last){
-        sendSet();
+        sendSet(); //Send visibility set to each cell of the visibility vector
         visibility.clear();
         visibility.push_back(x);
         visibility.push_back(y);
@@ -180,16 +182,17 @@ void ex6::addPoint(int x, int y){
 }
 
 
-//Update set of each cell
+
+//Update set of each cell which the visibility set computed
 void ex6::sendSet(){
 
     for(int k=0; k<((int) visibility.size()-1);k+=2){
 
         int i = visibility[k];
-        int j = visibility[k+1];
+        int j = visibility[k+1];  //For each i,j of the visibility vector (= each quad of the map)
 
         for(int id=0; id<((int) visibility.size()-1);id+=2){
-            addAndCheck(i,j,visibility[id],visibility[id+1]);
+            addAndCheck(i,j,visibility[id],visibility[id+1]);  //Add the points found to its set (check for double values)
         }
     }
 
@@ -199,7 +202,7 @@ void ex6::sendSet(){
 }
 
 
-//Add values to visibility and check for repetition
+//Add values to visibility and check to avoid repetition
 void ex6::addAndCheck(int i, int j, int a, int b){
 
     for(int k=0; k<((int) visibility.size()-1); k+=2){
@@ -281,8 +284,8 @@ void ex6::paintGL()
         Eigen::Matrix4f projection = camera_.SetProjection();
         Eigen::Matrix4f view = camera_.SetView();
         Eigen::Matrix4f model = camera_.SetModel();
-        Eigen::Vector2f position = camera_.GetPosition();
-        int camera_x = (int) position[0];
+        Eigen::Vector2f position = camera_.GetPosition();  //We get the position of the camera
+        int camera_x = (int) position[0];  //We get the quad in which the camera is placeds
         int camera_y = (int) position[1];
 
         Eigen::Matrix4f t = view * model;
@@ -292,20 +295,24 @@ void ex6::paintGL()
 
         normal = normal.inverse().transpose();
 
+
+        //If the camera is outside the map boundaries
         if(camera_x < 0 || camera_y < 0 || camera_x >= museum.size() || camera_y >= museum[0].size()){
-            ex5::paintGL();
+            ex5::paintGL(); //We paint without any visibility computation
         }
         else{
 
+            //We check if there is actual visibility from the quad we consider
             if(VCells[camera_x][camera_y].size()==0)
                 std::cout << "No visibility" << std::endl;
 
 
             else{
 
-
+                 //We paint only the quads that are visible from the cell we are in
                 for(int k=0; k<((int) VCells[camera_x][camera_y].size()-1); k+=2){
 
+                    //We get the coordinates of the quads visible and display as before
                     int i=VCells[camera_x][camera_y][k];
                     int j=VCells[camera_x][camera_y][k+1];
 
@@ -531,7 +538,7 @@ bool ex6::importMap(const std::string &filename){
 
     initVertexBuffer();
     checkIE(museum);
-    Visibility(100);
+    Visibility(100); //Compute visibility
     paintGL();
 
     return true;
@@ -548,18 +555,18 @@ QGroupBox* ex6::controlPanel()
     QGroupBox *groupBox = HW::controlPanel();
     groupBox->setStyleSheet(GroupBoxStyle);
 
-    //QPushButton *buttonImport  = new QPushButton("Import model");
+    QPushButton *buttonImport  = new QPushButton("Import model");
 
     QPushButton *Load = new QPushButton("Load Map");
 
     connect(Load,SIGNAL(clicked()),this,SLOT(loadMap()));
-    //connect(buttonImport, SIGNAL(clicked()), this, SLOT(importModel()));
+    connect(buttonImport, SIGNAL(clicked()), this, SLOT(importModel()));
 
     //Display
     auto layout = dynamic_cast<QGridLayout*>(groupBox->layout());
     int row = layout->rowCount() + 1;
-//    row++;
-//    layout->addWidget(buttonImport,row,0);
+    row++;
+    layout->addWidget(buttonImport,row,0);
     row++;
     row++;
     layout->addWidget(Load,row,0);

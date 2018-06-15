@@ -35,8 +35,6 @@ void ex5::initializeGL()
 
 
     glEnable(GL_NORMALIZE);
-//    glEnable(GL_CULL_FACE);
-//    glCullFace(GL_BACK);
     glEnable(GL_DEPTH_TEST);
 
     // init state variables
@@ -111,8 +109,10 @@ void ex5::initVertexBuffer(){
 
     if (V.size() == 0) return;
 
-    std::cout << "loading" << std::endl;
+    std::cout << "Loading models" << std::endl;
 
+    //For each model send, we create a VAO and send the infos of the model
+    //And add them to the list of VAOs + VBOs
 
     for(int i=0; i<(int) V.size(); i++){
 
@@ -247,7 +247,9 @@ void ex5::computeWall(){
 
 //--------------------------------------------------------------------------------
 
-//Check if a 0 is surronded by 4 0 up, down, left & right
+
+
+//Check if a 0 is interior or exterior (1st test = surronded by 4 0 up, down, left & right)
 bool ex5::checkIE_indiv(std::vector<std::vector<int>> map, int row, int line){
 
     bool flag_up=false;
@@ -260,7 +262,7 @@ bool ex5::checkIE_indiv(std::vector<std::vector<int>> map, int row, int line){
     int k=line;
     int l=line;
 
-    //UP
+    //UP : the numbers on the line above and stop when we find a 1
     if(row>0){
         while(!flag_up && i>0){
             flag_up=(map[line][i-1]==1);
@@ -300,14 +302,17 @@ bool ex5::checkIE_indiv(std::vector<std::vector<int>> map, int row, int line){
 
 
 
-//List all Interior / exterior 0 - double check the interior
+//List all Interior / exterior 0 - double check the interior : check if the interior 0s have exterior 0s as neighbours
 void ex5::checkIE(std::vector<std::vector<int>> map){
 
+    //Create a matrix that say if all 0 on the map are interior or exterior
     IE=Eigen::MatrixXd::Zero(map[0].size(),map.size());
 
+    //Loop on all the map
     for(int row=0; row<((int) map.size() -1); row++){
         for(int line=0; line<((int) map[0].size()-1); line++){
 
+            //If the quad is not a wall
             if(map[line][row]!=1){
 
                 bool flag=checkIE_indiv(map,row,line); //True if 0 is found interior, false otherwise
@@ -359,16 +364,8 @@ void ex5::checkIE(std::vector<std::vector<int>> map){
                     }
 
 
-                    if(row==2&&line==1){
-                        std::cout << flag_up << std::endl;
-                        std::cout << flag_down << std::endl;
-                        std::cout << flag_left << std::endl;
-                        std::cout << flag_right << std::endl;
-
-                    }
-
-                    if(flag_up||flag_down||flag_left||flag_right){  //If we find a 0 exterior neighbour
-                        flag=!flag;
+                    if(flag_up||flag_down||flag_left||flag_right){  //If we find a 0 exterior as neighbour
+                        flag=!flag; // It was a false positive : we change the value
                     }
                 }
 
@@ -380,9 +377,6 @@ void ex5::checkIE(std::vector<std::vector<int>> map){
     }
 
 
-
-
-
 }
 
 
@@ -391,12 +385,12 @@ void ex5::checkIE(std::vector<std::vector<int>> map){
 
 
 
-//Check which walls should be created depending on the neighbours
+//Check where walls should be created depending on the neighbours
 std::vector<int> ex5::checkWall(std::vector<std::vector<int>> map, int line, int row){
 
     std::vector<int> wall_map(4);  // UP - DOWN - LEFT - RIGHT
 
-
+    //Check the boundaries of the map
     if(line==0){
         wall_map[0]=1;
     }
@@ -410,22 +404,22 @@ std::vector<int> ex5::checkWall(std::vector<std::vector<int>> map, int line, int
         wall_map[3]=1;
     }
 
-    //UP
+    //UP - if cell that is up is exterior
     if(line!=0 && map[line-1][row]==0 && IE(line-1,row)==0){
         wall_map[0]=1;
     }
 
-    //DOWN
+    //DOWN - if cell that is down is exterior
     if(line!=((int) map.size()-1) && map[line+1][row]==0 && IE(line+1,row)==0){
         wall_map[1]=1;
     }
 
-    //LEFT
+    //LEFT - if cell that is on the left is exterior
     if(row!=0 && map[line][row-1]==0 && IE(line,row-1)==0){
          wall_map[2]=1;
     }
 
-    //RIGHT
+    //RIGHT - if cell that is on the right is exterior
     if(row!=((int) map[0].size()-1) && map[line][row+1]==0 && IE(line,row+1)==0){
         wall_map[3]=1;
     }
@@ -486,19 +480,21 @@ void ex5::paintGL()
 
                 //DISPLAY
 
-                if(museum[i][j]==0){
+                //Print ground ----------------------------------------------------
+                if(museum[i][j]==0){ //Paint the floor : 0
                     Eigen::Vector3f c(3);
-                    if(IE(i,j)==1){
+
+                    if(IE(i,j)==1){  //In red if the 0 is interior
                         c[0]=1.0;
                         c[1]=0.0;
                         c[2]=0.0;
                     }
-                    else{
+                    else{  // In green if it is exterior
                         c[0]=0.0;
                         c[1]=1.0;
                         c[2]=0.0;
                     }
-                    gShader->setVec3("color",c);
+                    gShader->setVec3("color",c);  //Send color to shader
                     glBindVertexArray(VAO);
                     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,EBO);
                     glDrawElements(GL_TRIANGLES,faces.size(),GL_UNSIGNED_INT,0);
@@ -507,8 +503,8 @@ void ex5::paintGL()
                 }
 
 
-                //Print walls
-                if(museum[i][j]==1){
+                //Print walls ----------------------------------------------------
+                if(museum[i][j]==1){  //Print the walls : 1
 
                     Eigen::Vector3f c(1.0,0.0,0.0);
                     gShader->setVec3("color",c);
@@ -518,18 +514,19 @@ void ex5::paintGL()
                     glBindVertexArray(0);
                     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,0);
 
-
+                    //Grey walls
                     c[0]=0.5;
                     c[1]=0.5;
                     c[2]=0.5;
                     gShader->setVec3("color",c);
 
-                    //Get the position of the walls around the tile
+                    //Get the position of the walls around the quad
                     std::vector<int> Walls = checkWall(museum, i, j);
                     for(int k=0; k<4; k++){
 
                         //Apply rotations to the quads and display them as walls
-                        if(Walls[0]==1){
+
+                        if(Walls[0]==1){  //Wall up
                             Eigen::Affine3f t(Eigen::Translation3f(Eigen::Vector3f(-1,0,1)));
                             Eigen::Matrix4f R1 = model*A.matrix()*t.matrix();
                             gShader->setMat4("u_model",R1);
@@ -541,7 +538,7 @@ void ex5::paintGL()
 
                         }
 
-                        if(Walls[1]==1){
+                        if(Walls[1]==1){  //Wall down
                             Eigen::Affine3f t(Eigen::Translation3f(Eigen::Vector3f(-1,0,0)));
                             Eigen::Matrix4f R2 = model*A.matrix()*t.matrix();
                             gShader->setMat4("u_model",R2);
@@ -553,7 +550,7 @@ void ex5::paintGL()
 
                         }
 
-                        if(Walls[2]==1){
+                        if(Walls[2]==1){  //Wall left
                             Eigen::Affine3f t(Eigen::Translation3f(Eigen::Vector3f(0,0,1)));
                             Eigen::Matrix4f R3=model*t.matrix();
                             gShader->setMat4("u_model",R3);
@@ -564,7 +561,7 @@ void ex5::paintGL()
                             glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,0);
                         }
 
-                        if(Walls[3]==1){
+                        if(Walls[3]==1){  //Wall right
                             gShader->setMat4("u_model",model);
                             glBindVertexArray(WVAO);
                             glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,WEBO);
@@ -577,13 +574,13 @@ void ex5::paintGL()
                 }
 
 
-                //Print models
+                //Print models ----------------------------------------------------
                 if(V.size()!=0 && museum[i][j]>1){
+                    //Print the models if they have been loaded
 
                     if (museum[i][j]-1 <= (int) V.size()){
 
-                        //std::cout << VAO_M.size() << std::endl;
-
+                        //Print the tile in blue to spot the models
                         Eigen::Vector3f c(0.0,0.0,1.0);
                         gShader->setVec3("color",c);
                         glBindVertexArray(VAO);
@@ -592,10 +589,13 @@ void ex5::paintGL()
                         glBindVertexArray(0);
                         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,0);
 
-
+                        //Resize the model to fit the quad on which it's displayed
                         float size=fmax(2.5*max[museum[i][j]-2][0],2.5*max[museum[i][j]-2][2]);
                         Eigen::Matrix4f modelMatrix = Eigen::Matrix4f::Identity();
+                        //Translate in the middle of the quad
                         Eigen::Affine3f t(Eigen::Translation3f(Eigen::Vector3f(-1*min[museum[i][j]-2][0],-min[museum[i][j]-2][1],-1*min[museum[i][j]-2][2])));
+
+                        //modelMatrix = resize matrix
                         modelMatrix(0,0)=1/size;
                         modelMatrix(1,1)=1/size;
                         modelMatrix(2,2)=1/size;
@@ -664,18 +664,22 @@ bool ex5::importMap(const std::string &filename){
 
     museum.clear();
 
-
+    //Open the file and read it
     std::ifstream fin;
     fin.open(filename.c_str());
+
+    //If we fail to open
     if (!fin.is_open() || !fin.good()) return false;
 
     std::string line;
+    //We read the file line by line
     for(int i=0; std::getline(fin,line);i++){
 
         std::stringstream ss;
         ss << line;
         std::vector<int> temp;
 
+        //Add the value to the museum variable
         museum.push_back(temp);
 
         int val;
@@ -687,7 +691,7 @@ bool ex5::importMap(const std::string &filename){
     fin.close();
 
     initVertexBuffer();
-    checkIE(museum);
+    checkIE(museum); //Check interior exterior 0s of the museum
     paintGL();
 
     return true;
@@ -712,7 +716,7 @@ bool ex5::LoadModel(QString filename) {
     res = data_representation::ReadFromPly(file, mesh_temp.get());
   }
 
-  if (res) {
+  if (res) {  //Store the model in vectors everytime we upload one more
       V.push_back(mesh_temp->vertices_);
       F.push_back(mesh_temp->faces_);
       N.push_back(mesh_temp->normals_);
@@ -755,9 +759,6 @@ QGroupBox* ex5::controlPanel()
     groupBox->setStyleSheet(GroupBoxStyle);
 
     QPushButton *buttonImport  = new QPushButton("Import model");
-    //QPushButton *buttonExport  = new QPushButton("Export model");
-
-//    mesh_importer.AddImportExportPLY(groupBox);
 
     QPushButton *Load = new QPushButton("Load Map");
 
