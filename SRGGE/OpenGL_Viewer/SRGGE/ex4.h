@@ -38,8 +38,6 @@ public:
 
     int                                     nb_triangles;
 
-    std::vector<int>                        IDAdvanced(Eigen::Matrix4f view, Eigen::Matrix4f model, int frames);
-
     Eigen::MatrixXd                         Levels;
     Eigen::MatrixXd                         Model_Frames;
 

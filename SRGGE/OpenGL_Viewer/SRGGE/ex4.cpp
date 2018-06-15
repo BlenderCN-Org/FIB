@@ -251,42 +251,6 @@ void ex4::computeLevels(Eigen::Matrix4f view, Eigen::Matrix4f model){
 //-----------------------------------------------------------------------------------------------
 
 
-std::vector<int> ex4::IDAdvanced(Eigen::Matrix4f view, Eigen::Matrix4f model, int frame){
-
-    int n = Levels.rows();
-
-    float minCost = 0;
-    std::vector<int> index(2,0);
-    index[0]=-1;
-    index[1]=-1;
-
-    for(int i=0; i<n; i++){
-        for(int j=0; j<n; j++){
-            if(Levels(i,j)>0){
-                if(index[0]==-1){  //First time in the loop : minimum = first value
-                    minCost=computeIndivCost(view, model, i,j,Levels(i,j)-1)-computeIndivCost(view, model, i,j,Levels(i,j));
-                    index[0]=i;
-                    index[1]=j;
-                }
-                else{
-                    //Compute the difference between the cost of the model at the actual level and the cost of the model at the level-1
-                    float diff = computeIndivCost(view, model, i,j,Levels(i,j)-1)-computeIndivCost(view, model, i,j,Levels(i,j));
-                    if(diff<minCost && frame-Model_Frames(i,j)>10){
-                        if(Model_Frames(i,j)!=0){
-                            std::cout << "here" << std::endl;
-                        }
-                        minCost = diff;  //Find the smallest cost
-                        index[0]=i;  //Keep the index of the model with the smallest cost (i,j) between the NxN models displayed
-                        index[1]=j;
-                    }
-                }
-            }
-        }
-    }
-
-    return index;
-}
-
 
 
 
