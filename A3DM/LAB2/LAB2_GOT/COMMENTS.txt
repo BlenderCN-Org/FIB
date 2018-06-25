@@ -1,0 +1,22 @@
+COMMENTS
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+1- Neighbours functions
+--------------------------------------------------------------------------------
+We have seen in class that we should get E:{F} from F:{E} to have a
+linear complexity and not a quadratic one. However, I did not figure out
+how to get F:{E} easily so my neighbours function is not optimal.
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+2- Union find function
+--------------------------------------------------------------------------------
+I found this function online by looking for explanations on union-find.
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+3- Volume computation (ex8)
+--------------------------------------------------------------------------------
+This function computes the volume of object and discards non-manifold shells.
+By testing on the partial-icosa model, I obtain a negative volume. I think
+this is due to the small icosahedron inside that is considered as a hole inside 
+the big one (because of the use of boolean operation A-B). When I create an
+object with only small icosahedron, I get the same volume but positive. 
