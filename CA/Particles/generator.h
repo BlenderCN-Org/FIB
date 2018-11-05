@@ -14,7 +14,7 @@ class Generator
 
 public:
 //    enum class UpdateMethod : std::int8_t { EulerOrig, EulerSemi, Verlet };
-
+    Generator();
     Generator(int nb_particles);
 
     //Update all particles
@@ -35,10 +35,22 @@ public:
 
     Particle::UpdateMethod method = Particle::UpdateMethod::EulerOrig;
 
+    float ke = 500.0;
+    float l_0 = 1.0;
+    float kd = 10;
+
+    float ke_shear=1.0;
+    float kd_shear=0.001;
+
+    bool spring1D_selected=false; //ke=500 kd=10
+    bool spring2D_selected=true;
 
 private:
 
     int nb_particles;
+    int particles1D=5;
+    int particles2D_row=5;
+    int particles2D_col=5;
 
     //Buffers
     GLuint particleBuffer, planeBuffer;
@@ -48,6 +60,9 @@ private:
     //Respawns particle
     void respawnParticle(Particle &particle);
 
+    void spring1D(); //Compute forces for the 1D-spring system
+    void spring2D(); //Compute forces for the 2D-spring system
+    glm::vec3 spring_force(int id1, int id2, float l0, float kelas, float kdamp); //Compute the spring force between 2 particles
 
 };
 

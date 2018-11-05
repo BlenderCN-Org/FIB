@@ -212,7 +212,7 @@ void Triangle::Display(QOpenGLShaderProgram *program, QMatrix4x4 proj, QMatrix4x
     program->setUniformValue("modelview", modelView);
     program->setUniformValue("normalMatrix", modelView.normalMatrix());
 
-    program->setUniformValue("color",0.0,0.0,0.0,1.0);
+    program->setUniformValue("color",0.0,0.0,0.7,1.0);
 
     glBindVertexArray(triangleVAO);
     glDrawArrays(GL_TRIANGLES,0,3);

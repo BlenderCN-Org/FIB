@@ -31,6 +31,8 @@ protected:
 	void paintGL();
     void initVertexBuffer();
 
+    void createGenerator();
+
 	void mousePressEvent(QMouseEvent *event);
 	void mouseMoveEvent(QMouseEvent *event);
 
@@ -51,9 +53,9 @@ private:
     QOpenGLShaderProgram *programParticles;
 
 
-    Generator *G;
+    Generator G;
 
-    GLuint nb_particles = 15;
+    GLuint nb_particles = 300;
     //std::vector<Particle> particles;
     GLuint VAO;
     GLuint particleBuffer = 0;

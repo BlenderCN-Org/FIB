@@ -37,25 +37,32 @@ GLWidget::~GLWidget()
 }
 
 
-void GLWidget::initializeGL()
-{
+void GLWidget::createGenerator(){
 
-    G = new Generator(200);
+    G = Generator(nb_particles);
     initializeOpenGLFunctions();
 
     //Init particles
-    G->initBuffers();
+    G.initBuffers();
     //Init planes
-    G->plane_down.initBuffers();
-    G->plane_up.initBuffers();
-    G->plane_bottom.initBuffers();
-    G->plane_front.initBuffers();
-    G->plane_left.initBuffers();
-    G->plane_right.initBuffers();
+    G.plane_down.initBuffers();
+    G.plane_up.initBuffers();
+    G.plane_bottom.initBuffers();
+    G.plane_front.initBuffers();
+    G.plane_left.initBuffers();
+    G.plane_right.initBuffers();
     //Init triangle
-    G->triangle.initBuffers();
+    G.triangle.initBuffers();
     //Init sphere
-    G->sphere.initBuffers();
+    G.sphere.initBuffers();
+}
+
+void GLWidget::initializeGL()
+{
+
+    initializeOpenGLFunctions();
+
+    createGenerator();
 
     program = new QOpenGLShaderProgram();
     program->addShaderFromSourceFile(QOpenGLShader::Vertex, ":/shaders/simpleshader.vert");
@@ -110,18 +117,18 @@ void GLWidget::paintGL()
     QMatrix4x4 modelView = setModelview();
 
     //Display planes
-    G->plane_down.Display(program,proj,modelView);
-    G->plane_up.Display(program,proj,modelView);
-    G->plane_left.Display(program,proj,modelView);
-    G->plane_right.Display(program,proj,modelView);
-    G->plane_bottom.Display(program,proj,modelView);
-    G->plane_front.Display(program,proj,modelView);
-    G->triangle.Display(program,proj,modelView);
-    G->sphere.Display(programParticles,proj,modelView);
+    G.plane_down.Display(program,proj,modelView);
+    G.plane_up.Display(program,proj,modelView);
+    G.plane_left.Display(program,proj,modelView);
+    G.plane_right.Display(program,proj,modelView);
+    G.plane_bottom.Display(program,proj,modelView);
+    G.plane_front.Display(program,proj,modelView);
+    G.triangle.Display(program,proj,modelView);
+    G.sphere.Display(programParticles,proj,modelView);
 
 
     //Display particles
-    G->Display(programParticles,proj,modelView);
+    G.Display(programParticles,proj,modelView);
 
 
 }
@@ -198,12 +205,13 @@ void GLWidget::_tick()
 
 
 void GLWidget::setParticleSize(float size){
-    G->radius = size;
+    G.radius = size;
 }
 
 
 void GLWidget::setMethod(Particle::UpdateMethod met){
-    G->method = met;
+    G.method = met;
+    reset();
 }
 
 
@@ -212,6 +220,10 @@ void GLWidget::reset(){
 //    if(programParticles) delete programParticles;
 //    initializeGL();
 //    paintGL();
+
+    createGenerator();
+    update();
+
 }
 
 
