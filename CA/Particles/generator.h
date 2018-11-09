@@ -36,7 +36,7 @@ public:
     Particle::UpdateMethod method = Particle::UpdateMethod::EulerOrig;
 
     float ke = 500.0;
-    float l_0 = 1.0;
+    float l_0 = 1;
     float kd = 10;
 
     float ke_shear=1.0;
@@ -48,9 +48,9 @@ public:
 private:
 
     int nb_particles;
-    int particles1D=5;
-    int particles2D_row=5;
-    int particles2D_col=5;
+    int particles1D=9;
+    int particles2D_row=10;
+    int particles2D_col=10;
 
     //Buffers
     GLuint particleBuffer, planeBuffer;

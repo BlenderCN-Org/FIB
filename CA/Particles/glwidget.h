@@ -65,6 +65,8 @@ public slots:
     void setParticleSize(float size);
     void setMethod(Particle::UpdateMethod met);
     void reset();
+    void setSpring1D();
+    void setSpring2D();
 
 };
 

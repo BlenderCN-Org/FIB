@@ -51,8 +51,8 @@
   <widget class="QDockWidget" name="dockWidget">
    <property name="minimumSize">
     <size>
-     <width>192</width>
-     <height>329</height>
+     <width>208</width>
+     <height>430</height>
     </size>
    </property>
    <attribute name="dockWidgetArea">
@@ -115,6 +115,35 @@
          <widget class="QRadioButton" name="Verlet">
           <property name="text">
            <string>Verlet</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </item>
+     <item>
+      <widget class="QGroupBox" name="groupBox_3">
+       <property name="title">
+        <string>Springs</string>
+       </property>
+       <layout class="QVBoxLayout" name="verticalLayout_5">
+        <item>
+         <widget class="QRadioButton" name="springOne">
+          <property name="enabled">
+           <bool>true</bool>
+          </property>
+          <property name="text">
+           <string>1D Springs</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QRadioButton" name="springTwo">
+          <property name="enabled">
+           <bool>true</bool>
+          </property>
+          <property name="text">
+           <string>2D Springs</string>
           </property>
          </widget>
         </item>

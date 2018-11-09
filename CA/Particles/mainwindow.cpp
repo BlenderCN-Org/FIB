@@ -53,3 +53,14 @@ void MainWindow::on_quitButton_pressed()
 {
     this->close();
 }
+
+
+void MainWindow::on_springTwo_toggled(bool checked)
+{
+    ui->openGLWidget->setSpring2D();
+}
+
+void MainWindow::on_springOne_toggled(bool checked)
+{
+    ui->openGLWidget->setSpring1D();
+}

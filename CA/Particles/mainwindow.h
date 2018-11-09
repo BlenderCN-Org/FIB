@@ -20,12 +20,15 @@ private slots:
 
     void on_horizontalSlider_sliderMoved(int position);
 
-
     void on_EulerOrig_toggled(bool checked);
 
     void on_Verlet_toggled(bool checked);
 
     void on_EulerSemi_toggled(bool checked);
+
+    void on_springTwo_toggled(bool checked);
+
+    void on_springOne_toggled(bool checked);
 
     void on_resetButton_pressed();
 

@@ -14,14 +14,14 @@ Generator::Generator(int nb_particles) :
 
     if(spring1D_selected){
         for(int i=0; i<particles1D; i++)
-            particles.push_back(Particle(glm::vec3(0,0,i*l_0),glm::vec3(0.0,0.0,0.0),0.70,false,life,glm::vec3(0,0,0)));
+            particles.push_back(Particle(glm::vec3(-3,2,i*l_0-2),glm::vec3(0.0,0.0,0.0),0.2,false,life,glm::vec3(0,0,0)));
     }
 
     else if(spring2D_selected){
         for(int i=0; i<particles2D_row; i++)
         {
             for(int j=0; j<particles2D_col; j++)
-                particles.push_back(Particle(glm::vec3(-i*l_0,0,-j*l_0),glm::vec3(0.0,0.0,0.0),0.70,false,life,glm::vec3(0,0,0)));
+                particles.push_back(Particle(glm::vec3(-i*l_0,3,-j*l_0),glm::vec3(0.0,0.0,0.0),0.2,false,life,glm::vec3(0,0,0)));
 
         }
     }

@@ -227,4 +227,17 @@ void GLWidget::reset(){
 }
 
 
+void GLWidget::setSpring1D(){
+    G.spring1D_selected=true;
+    G.spring2D_selected=false;
+    reset();
+}
+
+
+
+void GLWidget::setSpring2D(){
+    G.spring1D_selected=false;
+    G.spring2D_selected=true;
+    reset();
+}
 
