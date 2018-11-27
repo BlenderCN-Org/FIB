@@ -2,7 +2,7 @@
 
 
 in vec3 fragNormal;
-in vec3 vColor;
+in vec4 vColor;
 
 out vec4 fragColor;
 
@@ -13,10 +13,9 @@ uniform vec4 color;
 
 void main()
 {
-//        if(bLighting)
-//                fragColor = color * normalize(fragNormal).z;
-//        else
-//                fragColor = color;
+        if(bLighting)
+                fragColor = vColor * normalize(fragNormal).z;
+        else
+                fragColor = color;
 
-    fragColor=vec4(vColor,1.0);
 }

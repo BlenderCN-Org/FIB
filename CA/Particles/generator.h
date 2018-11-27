@@ -42,13 +42,13 @@ public:
     float ke_shear=1.0;
     float kd_shear=0.001;
 
-    bool spring1D_selected=false; //ke=500 kd=10
-    bool spring2D_selected=true;
+    bool spring1D_selected=true; //ke=500 kd=10
+    bool spring2D_selected=false;
 
 private:
 
     int nb_particles;
-    int particles1D=9;
+    int particles1D=6;
     int particles2D_row=10;
     int particles2D_col=10;
 
