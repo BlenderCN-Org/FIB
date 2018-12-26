@@ -115,15 +115,10 @@ void GLWidget::paintGL()
 
     //Display planes
     G.plane_down.Display(program,proj,modelView);
-//    G.plane_up.Display(program,proj,modelView);
-//    G.plane_left.Display(program,proj,modelView);
-//    G.plane_right.Display(program,proj,modelView);
-//    G.plane_bottom.Display(program,proj,modelView);
-//    G.plane_front.Display(program,proj,modelView);
 
 
     //Display particles
-    G.Display(programParticles,proj,modelView);
+    G.Display(program,proj,modelView);
 
 
 }

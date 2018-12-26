@@ -7,6 +7,10 @@
 
 #include "particle.h"
 #include "geometry.h"
+#include "cal3dExt/model.h"
+
+#include <cal3d/cal3d.h>
+
 
 
 class Generator
@@ -34,6 +38,9 @@ public:
     Sphere sphere;
 
     Particle::UpdateMethod method = Particle::UpdateMethod::EulerOrig;
+
+    std::vector<Model*> m_models;
+//    std::vector<Agent*> m_agents;
 
 private:
 

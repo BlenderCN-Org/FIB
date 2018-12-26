@@ -4,7 +4,6 @@
 #include <glm.hpp>
 #include <iostream>
 #include <QOpenGLFunctions>
-#include <cal3d/cal3d.h>
 
 class Particle
 {

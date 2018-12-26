@@ -1,9 +1,27 @@
 #include "generator.h"
+#include "cal3dExt/modelloader.h"
 
 #include <random>
 #define rand01() ((float)std::rand()/RAND_MAX)
 
 Generator::Generator(){
+}
+
+
+void loadModels(std::vector<ModelData*>& models)
+{
+    ModelData* data;
+
+    // load 'skeleton' model
+    std::cout << "Loading 'skeleton' model ..." << std::endl;
+    data = ModelLoader::getModel("skeleton", "/Users/Emy/GitHub/FIB/CA/EA/data/skeleton/", "/Users/Emy/GitHub/FIB/CA/EA/data/skeleton.cfg");
+    if (!data) {
+        std::cerr << "Model initialization failed! (skeleton)" << std::endl;
+        return;
+    }
+    models.push_back(data);
+    std::cout << std::endl;
+
 }
 
 Generator::Generator(int nb_particles) :
@@ -12,8 +30,22 @@ Generator::Generator(int nb_particles) :
     particles.clear();
     this->initBuffers();
 
-    particles.push_back(Particle(glm::vec3(0,0,0),glm::vec3(5*rand01()-0.5f,0.0f,5*rand01()-0.5f),0.95,false,rand01()*life,glm::vec3(0)));
+    // preload models
+    std::vector<ModelData*> modelsData;
+    loadModels(modelsData);
+    int NUM_MODELS = modelsData.size();
 
+    Particle p = Particle(glm::vec3(0,0,0),glm::vec3(5*rand01()-0.5f,0.0f,5*rand01()-0.5f),0.95,false,rand01()*life,glm::vec3(0));
+    particles.push_back(p);
+    Model* m = new Model();
+    glm::vec3 blend = glm::normalize(glm::vec3(rand01(), rand01(), rand01()));
+    m->setCoreModel(modelsData[0]->coreModel);
+    m->setAnimationIds(modelsData[0]->animationIds);
+    m->setModelScale(modelsData[0]->renderScale);
+    m->onInit();
+    m->setMotionBlend(&blend[0], 0);
+    m->onUpdate(10*rand01());
+    m_models.push_back(m);
 
     plane_down = Plane(glm::vec3(0,0,0),glm::vec3(0,1,0));
     plane_up= Plane(glm::vec3(0,5,0), glm::vec3(0,-1,0));
@@ -23,6 +55,7 @@ Generator::Generator(int nb_particles) :
     plane_bottom = Plane(glm::vec3(0,0,-5),glm::vec3(0,0,1));
 
 }
+
 
 
 void Generator::initBuffers(){
@@ -148,21 +181,20 @@ void Generator::Display(QOpenGLShaderProgram *program, QMatrix4x4 proj, QMatrix4
     program->bind();
 
     program->setUniformValue("projection", proj);
-    program->setUniformValue("modelview", modelView);
     program->setUniformValue("normalMatrix", modelView.normalMatrix());
 
     Update(0.01f);
 
     int i=0;
-    for (Particle particle : particles)
-    {
+    QMatrix4x4 MVtemp = modelView;
+
+    for (Particle particle : particles){
         if(i>0){
-            program->setUniformValue("offset", particle.getCurrentPosition().x,particle.getCurrentPosition().y,particle.getCurrentPosition().z);
-            program->setUniformValue("color",0.4,0.0,0.8,1.0);
-            program->setUniformValue("radius",radius);
-            glBindVertexArray(VAO);
-            glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-            glBindVertexArray(0);
+            MVtemp.translate(particle.getCurrentPosition().x,particle.getCurrentPosition().y,particle.getCurrentPosition().z);
+            MVtemp.rotate(90,QVector3D(-1,0,0));
+            program->setUniformValue("modelview", MVtemp);
+            m_models[0]->onRender();
+            MVtemp=modelView;
         }
         i++;
     }
