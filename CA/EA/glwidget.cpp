@@ -9,7 +9,7 @@ using namespace std;
 
 
 const float rotationFactor = 0.5f;
-const float maxRotationCamera = 75.0f;
+const float maxRotationCamera = 360.0f;
 const float minDistanceCamera = 1.0f;
 const float maxDistanceCamera = 100.0f;
 
@@ -43,18 +43,26 @@ GLWidget::~GLWidget()
 
 void GLWidget::createGenerator(){
 
-    G = Generator(nb_particles);
-    initializeOpenGLFunctions();
+    if(!pathfinding){
+        G = Generator(nb_particles);
+        initializeOpenGLFunctions();
 
-    //Init particles
-    G.initBuffers();
-    //Init planes
-    G.plane_down.initBuffers();
-    G.plane_up.initBuffers();
-    G.plane_bottom.initBuffers();
-    G.plane_front.initBuffers();
-    G.plane_left.initBuffers();
-    G.plane_right.initBuffers();
+        //Init particles
+        G.initBuffers();
+        //Init planes
+        G.plane_down.initBuffers();
+        G.plane_up.initBuffers();
+        G.plane_bottom.initBuffers();
+        G.plane_front.initBuffers();
+        G.plane_left.initBuffers();
+        G.plane_right.initBuffers();
+    }
+
+    else{
+        P = pathFinding(10,10);
+        P.aStar();
+    }
+
 }
 
 void GLWidget::initializeGL()
@@ -101,7 +109,6 @@ void GLWidget::initializeGL()
     }
 
 
-
 	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
     glEnable(GL_DEPTH_TEST);
 
@@ -129,11 +136,17 @@ void GLWidget::paintGL()
     QMatrix4x4 proj = setProjection(width/height);
     QMatrix4x4 modelView = setModelview();
 
-    //Display planes
-    G.plane_down.Display(program,proj,modelView);
+    if(!pathfinding){
+        //Display planes
+        G.plane_down.Display(program,proj,modelView);
+        //Display characters
+        G.Display(programCharacters,proj,modelView);
+    }
 
-    //Display characters
-    G.Display(programCharacters,proj,modelView);
+    else{
+        P.Display(programCharacters,proj,modelView);
+        update();
+    }
 
 
 }
@@ -208,21 +221,4 @@ void GLWidget::_tick()
 
 }
 
-
-void GLWidget::setParticleSize(float size){
-    G.radius = size;
-}
-
-
-void GLWidget::setMethod(Particle::UpdateMethod met){
-    G.method = met;
-    reset();
-}
-
-
-void GLWidget::reset(){
-    createGenerator();
-    update();
-
-}
 

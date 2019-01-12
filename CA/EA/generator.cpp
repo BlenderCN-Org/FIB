@@ -10,6 +10,7 @@ Generator::Generator(){
 
 void loadModels(std::vector<ModelData*>& models)
 {
+
     ModelData* data;
     // load 'skeleton' model
     std::cout << "Loading 'skeleton' model ..." << std::endl;
@@ -67,11 +68,11 @@ Generator::Generator(int nb_particles) :
     models.push_back(m_models[0]);
 
     plane_down = Plane(glm::vec3(0,0,0),glm::vec3(0,1,0));
-    plane_up= Plane(glm::vec3(0,5,0), glm::vec3(0,-1,0));
-    plane_right = Plane(glm::vec3(5,0,0),glm::vec3(-1,0,0));
-    plane_left = Plane(glm::vec3(-5,0,0),glm::vec3(1,0,0));
-    plane_front = Plane(glm::vec3(0,0,5),glm::vec3(0,0,-1));
-    plane_bottom = Plane(glm::vec3(0,0,-5),glm::vec3(0,0,1));
+    plane_up= Plane(glm::vec3(0,10,0), glm::vec3(0,-1,0));
+    plane_right = Plane(glm::vec3(10,0,0),glm::vec3(-1,0,0));
+    plane_left = Plane(glm::vec3(-10,0,0),glm::vec3(1,0,0));
+    plane_front = Plane(glm::vec3(0,0,10),glm::vec3(0,0,-1));
+    plane_bottom = Plane(glm::vec3(0,0,-10),glm::vec3(0,0,1));
 
 }
 
@@ -185,6 +186,9 @@ void Generator::Display(QOpenGLShaderProgram *program, QMatrix4x4 proj, QMatrix4
 
 //    float time = timer.elapsed() / 1000.0f;
 //    std::cout << time << std::endl;
+
+
+    glClear(GL_DEPTH_BUFFER_BIT);
 
     program->bind();
 

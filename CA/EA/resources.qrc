@@ -116,5 +116,7 @@
         <file>data/skeleton.cfg</file>
         <file>shaders/character.frag</file>
         <file>shaders/character.vert</file>
+        <file>shaders/grid.frag</file>
+        <file>shaders/grid.vert</file>
     </qresource>
 </RCC>

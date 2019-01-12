@@ -46,9 +46,10 @@ public:
     std::vector<Model*> m_models;
 //    std::vector<Agent*> m_agents;
 
+    int nb_particles;
+
 private:
 
-    int nb_particles;
 
     //Buffers
     GLuint particleBuffer, planeBuffer;

@@ -13,6 +13,7 @@
 
 #include "particle.h"
 #include "generator.h"
+#include "pathfinding.h"
 
 
 class GLWidget : public QOpenGLWidget, protected QOpenGLFunctions
@@ -54,17 +55,18 @@ private:
 
 
     Generator G;
+    pathFinding P;
 
     GLuint nb_particles = 10;
     //std::vector<Particle> particles;
     GLuint VAO;
     GLuint particleBuffer = 0;
 
+    bool pathfinding = true;
+
 public slots:
     void _tick();
-    void setParticleSize(float size);
-    void setMethod(Particle::UpdateMethod met);
-    void reset();
+
 
 };
 
