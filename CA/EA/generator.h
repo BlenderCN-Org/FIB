@@ -5,9 +5,13 @@
 #include <QOpenGLFunctions>
 #include <QOpenGLShaderProgram>
 
+#include<QElapsedTimer>
+
 #include "particle.h"
 #include "geometry.h"
 #include "cal3dExt/model.h"
+#include "cal3dExt/modelloader.h"
+
 
 #include <cal3d/cal3d.h>
 
@@ -28,17 +32,17 @@ public:
     //Init buffers for display
     void initBuffers();
     std::vector<Particle> particles;
+    std::vector<Model*> models;
     GLuint VAO, planeVAO;
 
     float radius=0.5f;
     int life = 50;
 
     Plane plane_down, plane_up, plane_right, plane_left, plane_bottom, plane_front;
-    Triangle triangle;
-    Sphere sphere;
 
     Particle::UpdateMethod method = Particle::UpdateMethod::EulerOrig;
 
+    std::vector<ModelData*> modelsData;
     std::vector<Model*> m_models;
 //    std::vector<Agent*> m_agents;
 
@@ -53,6 +57,8 @@ private:
     int firstUnusedParticle();
     //Respawns particle
     void respawnParticle(Particle &particle);
+
+    QElapsedTimer timer;
 
 };
 

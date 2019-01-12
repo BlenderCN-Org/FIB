@@ -18,6 +18,7 @@
 #include "global.h"
 #include "cal3d/cal3d.h"
 #include <QOpenGLFunctions>
+#include <QOpenGLShaderProgram>
 
 //----------------------------------------------------------------------------//
 // Class declaration                                                          //
@@ -92,9 +93,11 @@ protected:
 
   void initBuffers(CalRenderer *pCalRenderer);
 
-  GLuint VAO, VerticesBuffer, FacesBuffer;
-  std::vector<float> vertices_array;
+  GLuint VAO, VerticesBuffer, FacesBuffer, NormalsBuffer, ColorsBuffer;
+  std::vector<float> vertices_array,normals_array,colors_array;
   std::vector<int> faces_array;
+
+  int faceCount;
 };
 
 

@@ -114,5 +114,7 @@
         <file>data/cally.cfg</file>
         <file>data/paladin.cfg</file>
         <file>data/skeleton.cfg</file>
+        <file>shaders/character.frag</file>
+        <file>shaders/character.vert</file>
     </qresource>
 </RCC>

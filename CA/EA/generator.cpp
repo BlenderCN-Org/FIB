@@ -1,5 +1,5 @@
 #include "generator.h"
-#include "cal3dExt/modelloader.h"
+#include <math.h>
 
 #include <random>
 #define rand01() ((float)std::rand()/RAND_MAX)
@@ -11,7 +11,6 @@ Generator::Generator(){
 void loadModels(std::vector<ModelData*>& models)
 {
     ModelData* data;
-
     // load 'skeleton' model
     std::cout << "Loading 'skeleton' model ..." << std::endl;
     data = ModelLoader::getModel("skeleton", "/Users/Emy/GitHub/FIB/CA/EA/data/skeleton/", "/Users/Emy/GitHub/FIB/CA/EA/data/skeleton.cfg");
@@ -20,32 +19,52 @@ void loadModels(std::vector<ModelData*>& models)
         return;
     }
     models.push_back(data);
-    std::cout << std::endl;
+
+    ModelData* data2;
+    // load 'cally' model
+    std::cout << "Loading 'cally' model ..." << std::endl;
+    data2 = ModelLoader::getModel("cally", "/Users/Emy/GitHub/FIB/CA/EA/data/cally/", "/Users/Emy/GitHub/FIB/CA/EA/data/cally.cfg");
+    if (!data2) {
+        std::cerr << "Model initialization failed! (cally)" << std::endl;
+        return;
+    }
+    models.push_back(data2);
+
 
 }
 
 Generator::Generator(int nb_particles) :
     nb_particles(nb_particles)
 {
+
+    timer.start();
+
     particles.clear();
-    this->initBuffers();
+    models.clear();
+//    this->initBuffers();
 
     // preload models
-    std::vector<ModelData*> modelsData;
     loadModels(modelsData);
     int NUM_MODELS = modelsData.size();
 
-    Particle p = Particle(glm::vec3(0,0,0),glm::vec3(5*rand01()-0.5f,0.0f,5*rand01()-0.5f),0.95,false,rand01()*life,glm::vec3(0));
+    Particle p = Particle(glm::vec3(0,0,0),glm::vec3(10*rand01()-0.5f,0.0f,10*rand01()-0.5f),0.0f,false,rand01()*life,glm::vec3(0));
     particles.push_back(p);
-    Model* m = new Model();
-    glm::vec3 blend = glm::normalize(glm::vec3(rand01(), rand01(), rand01()));
-    m->setCoreModel(modelsData[0]->coreModel);
-    m->setAnimationIds(modelsData[0]->animationIds);
-    m->setModelScale(modelsData[0]->renderScale);
-    m->onInit();
-    m->setMotionBlend(&blend[0], 0);
-    m->onUpdate(10*rand01());
-    m_models.push_back(m);
+
+
+    for(int i=0; i<NUM_MODELS; i++){
+        Model* m = new Model();
+//        glm::vec3 blend = glm::normalize(glm::vec3(rand01(), rand01(), rand01()));
+        m->setCoreModel(modelsData[i]->coreModel);
+        m->setAnimationIds(modelsData[i]->animationIds);
+        m->setModelScale(modelsData[i]->renderScale);
+        m->onInit();
+////        m->setMotionBlend(&blend[i], 0);
+//        m->onUpdate(10*rand01());
+        m->setLodLevel(0.5f);
+        m_models.push_back(m);
+    }
+
+    models.push_back(m_models[0]);
 
     plane_down = Plane(glm::vec3(0,0,0),glm::vec3(0,1,0));
     plane_up= Plane(glm::vec3(0,5,0), glm::vec3(0,-1,0));
@@ -59,30 +78,6 @@ Generator::Generator(int nb_particles) :
 
 
 void Generator::initBuffers(){
-
-
-    GLfloat particle_quad[20] = {
-        //x, y, z (OpenGL coordinates system), lx, ly (local coordinates)
-        0.5f, -0.5f, 0.0f, 1.0f, -1.0f,
-        0.5f, 0.5f, 0.0f, 1.0f, 1.0f,
-        -0.5f, 0.5f, 0.0f, -1.0f, 1.0f,
-        -0.5f, -0.5f, 0.0f, -1.0f, -1.0f,
-    };
-
-
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &particleBuffer);
-    glBindVertexArray(VAO);
-    // Fill mesh buffer
-    glBindBuffer(GL_ARRAY_BUFFER, particleBuffer);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(float)*20, particle_quad, GL_STATIC_DRAW);
-
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 20, (GLvoid*)0);
-    glEnableVertexAttribArray(2);
-    glVertexAttribPointer(2 , 2, GL_FLOAT, GL_FALSE, 20, (GLvoid*)12);
-
-    glBindVertexArray(0);
 
 
 }
@@ -117,7 +112,7 @@ int Generator::firstUnusedParticle(){
 void Generator::respawnParticle(Particle &particle){
 
     particle.setPosition(glm::vec3(0,0,0));
-    particle.setVelocity(5*rand01()-0.5f,0.0f,5*rand01()-0.5f);
+    particle.setVelocity(rand01()+0.5f,0.0f,rand01()+0.5f);
     particle.setLifetime(life);
     particle.setForce(glm::vec3(0));
 
@@ -129,19 +124,21 @@ void Generator::respawnParticle(Particle &particle){
 
 void Generator::Update(GLfloat dt){
 
-        //Add new particles
+     //Add new particles
     for (int i=0; i<2; i++){
         int unusedParticle = firstUnusedParticle();
         respawnParticle(particles[unusedParticle]);
-        if(particles.size() < nb_particles)
-            particles.push_back(Particle(glm::vec3(0,0,0),glm::vec3(5*rand01()-0.5f,0.0f,5*rand01()-0.5f),0.95,false,rand01()*life,glm::vec3(0)));
+        if(particles.size() < nb_particles){
+            particles.push_back(Particle(glm::vec3(0,0,0),glm::vec3(rand01()+0.5f,0.0f,rand01()+0.5f),1.0f,false,rand01()*life,glm::vec3(0)));
+            models.push_back(m_models[rand()%(m_models.size())]);
+        }
     }
 
     //Update particles
     for (int i=0; i<particles.size(); i++){
-        particles[i].setLifetime(particles[i].getLifetime()-dt);
+//        particles[i].setLifetime(particles[i].getLifetime()-dt);
 
-        if (particles[i].getLifetime()>0.0f){
+//        if (particles[i].getLifetime()>0.0f){
 
 
             if(method == Particle::UpdateMethod::Verlet)
@@ -164,11 +161,19 @@ void Generator::Update(GLfloat dt){
             plane_bottom.checkCollision(particles[i]);
             plane_front.checkCollision(particles[i]);
 
-        }
+            //Check collisions with other particles
+            for(int j=1; j<particles.size() ; j++){
+                if(i!=j) particles[i].checkCollision(particles[j],radius);
+            }
 
-        else{
-            respawnParticle(particles[i]);
-        }
+
+//        }
+
+//        else{
+//            respawnParticle(particles[i]);
+//        }
+
+
     }
 
 }
@@ -178,6 +183,9 @@ void Generator::Update(GLfloat dt){
 
 void Generator::Display(QOpenGLShaderProgram *program, QMatrix4x4 proj, QMatrix4x4 modelView){
 
+//    float time = timer.elapsed() / 1000.0f;
+//    std::cout << time << std::endl;
+
     program->bind();
 
     program->setUniformValue("projection", proj);
@@ -185,21 +193,30 @@ void Generator::Display(QOpenGLShaderProgram *program, QMatrix4x4 proj, QMatrix4
 
     Update(0.01f);
 
-    int i=0;
     QMatrix4x4 MVtemp = modelView;
 
-    for (Particle particle : particles){
-        if(i>0){
-            MVtemp.translate(particle.getCurrentPosition().x,particle.getCurrentPosition().y,particle.getCurrentPosition().z);
-            MVtemp.rotate(90,QVector3D(-1,0,0));
-            program->setUniformValue("modelview", MVtemp);
-            m_models[0]->onRender();
-            MVtemp=modelView;
-        }
-        i++;
+    for(int i =1; i<particles.size(); i++){
+
+        MVtemp.translate(particles[i].getCurrentPosition().x,particles[i].getCurrentPosition().y,particles[i].getCurrentPosition().z);
+        MVtemp.rotate(90,QVector3D(-1,0,0));
+
+        float angle = atan2(particles[i].getVelocity().x,particles[i].getVelocity().z)*180/M_PI;
+        MVtemp.rotate(angle,QVector3D(0,0,1));
+
+
+        program->setUniformValue("modelview", MVtemp);
+        models[i]->setState(2,0.0f);
+
+        models[i]->onUpdate(timer.elapsed() / (1000.0*glm::length(particles[i].getVelocity())));
+        models[i]->onRender();
+        MVtemp=modelView;
     }
 
+
+
     program->release();
+
+    timer.restart();
 
 }
 

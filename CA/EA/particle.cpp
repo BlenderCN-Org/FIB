@@ -1,4 +1,5 @@
 #include "particle.h"
+#include "geometry.h"
 
 
 Particle::Particle()
@@ -162,4 +163,10 @@ void Particle::updateParticle(const float& dt, UpdateMethod method)
     return;
 }
 
+
+
+void Particle::checkCollision(Particle &p,float radius){
+    Sphere sphere = Sphere(p.m_currentPosition,radius/2);
+    sphere.checkCollision(*this);
+}
 

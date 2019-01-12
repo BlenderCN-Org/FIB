@@ -26,7 +26,10 @@ GLWidget::GLWidget(QWidget *parent) : QOpenGLWidget(parent), angleX(0.0f), angle
     QSurfaceFormat::setDefaultFormat(format);
     setFormat(format);
 
-    QTimer::singleShot(15, this, SLOT(_tick()));
+    QTimer::singleShot(5, this, SLOT(_tick()));
+
+    timer = new QElapsedTimer();
+    timer->start();
 
 
 }
@@ -81,9 +84,22 @@ void GLWidget::initializeGL()
     programParticles->link();
     if(!programParticles->isLinked())
     {
-            cout << "Shader program has not linked" << endl << endl << "Log: " << endl << endl << program->log().toStdString();
+            cout << "Shader program has not linked" << endl << endl << "Log: " << endl << endl << programParticles->log().toStdString();
             QApplication::quit();
     }
+
+    programCharacters = new QOpenGLShaderProgram();
+    programCharacters->addShaderFromSourceFile(QOpenGLShader::Vertex, ":/shaders/character.vert");
+    programCharacters->addShaderFromSourceFile(QOpenGLShader::Fragment, ":/shaders/character.frag");
+    programCharacters->bindAttributeLocation("position", 0);
+    programCharacters->bindAttributeLocation("normal", 2);
+    programCharacters->link();
+    if(!programCharacters->isLinked())
+    {
+            cout << "Shader program has not linked" << endl << endl << "Log: " << endl << endl << programCharacters->log().toStdString();
+            QApplication::quit();
+    }
+
 
 
 	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
@@ -116,9 +132,8 @@ void GLWidget::paintGL()
     //Display planes
     G.plane_down.Display(program,proj,modelView);
 
-
-    //Display particles
-    G.Display(program,proj,modelView);
+    //Display characters
+    G.Display(programCharacters,proj,modelView);
 
 
 }
@@ -189,7 +204,7 @@ QMatrix4x4 GLWidget::setModelview()
 void GLWidget::_tick()
 {
     update();
-    QTimer::singleShot(15, this, SLOT(_tick()));
+    QTimer::singleShot(5, this, SLOT(_tick()));
 
 }
 

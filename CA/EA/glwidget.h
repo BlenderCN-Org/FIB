@@ -9,6 +9,7 @@
 #include <QOpenGLShaderProgram>
 #include <QTimer>
 #include <QObject>
+#include <ctime>
 
 #include "particle.h"
 #include "generator.h"
@@ -23,25 +24,24 @@ public:
 	~GLWidget();
 
 
-    float time=5.0f;
-
 protected:
 	void initializeGL();
 	void resizeGL(int w, int h);
 	void paintGL();
     void initVertexBuffer();
+    void postFrame();
 
     void createGenerator();
 
 	void mousePressEvent(QMouseEvent *event);
-	void mouseMoveEvent(QMouseEvent *event);
+    void mouseMoveEvent(QMouseEvent *event);
 
 
 private:
     QMatrix4x4 setProjection(float aspect);
     QMatrix4x4 setModelview();
 
-    QTimer *timer;
+    QElapsedTimer *timer;
 
 	float angleX, angleY, distance;
 	QPoint lastMousePos;
@@ -50,12 +50,12 @@ private:
     float height;
 
     QOpenGLShaderProgram *program;
-    QOpenGLShaderProgram *programParticles;
+    QOpenGLShaderProgram *programParticles, *programCharacters;
 
 
     Generator G;
 
-    GLuint nb_particles = 4;
+    GLuint nb_particles = 10;
     //std::vector<Particle> particles;
     GLuint VAO;
     GLuint particleBuffer = 0;

@@ -116,170 +116,7 @@ int Model::getState()
 
 bool Model::onInit()
 {
-//  // open the model configuration file
-//  std::ifstream file;
-//  file.open(strFilename.c_str(), std::ios::in | std::ios::binary);
-//  if(!file)
-//  {
-//    std::cerr << "Failed to open model configuration file '" << strFilename << "'." << std::endl;
-//    return false;
-//  }
 
-//  // initialize the data path
-//  std::string strPath = m_path;
-
-//  // initialize the animation count
-//  int animationCount;
-//  animationCount = 0;
-
-//  // parse all lines from the model configuration file
-//  int line;
-//  for(line = 1; ; line++)
-//  {
-//    // read the next model configuration line
-//    std::string strBuffer;
-//    std::getline(file, strBuffer);
-
-//    // stop if we reached the end of file
-//    if(file.eof()) break;
-
-//    // check if an error happend while reading from the file
-//    if(!file)
-//    {
-//      std::cerr << "Error while reading from the model configuration file '" << strFilename << "'." << std::endl;
-//      return false;
-//    }
-
-//    // find the first non-whitespace character
-//    std::string::size_type pos;
-//    pos = strBuffer.find_first_not_of(" \t");
-
-//    // check for empty lines
-//    if((pos == std::string::npos) || (strBuffer[pos] == '\n') || (strBuffer[pos] == '\r') || (strBuffer[pos] == 0)) continue;
-
-//    // check for comment lines
-//    if(strBuffer[pos] == '#') continue;
-
-//    // get the key
-//    std::string strKey;
-//    strKey = strBuffer.substr(pos, strBuffer.find_first_of(" =\t\n\r", pos) - pos);
-//    pos += strKey.size();
-
-//    // get the '=' character
-//    pos = strBuffer.find_first_not_of(" \t", pos);
-//    if((pos == std::string::npos) || (strBuffer[pos] != '='))
-//    {
-//      std::cerr << strFilename << "(" << line << "): Invalid syntax." << std::endl;
-//      return false;
-//    }
-
-//    // find the first non-whitespace character after the '=' character
-//    pos = strBuffer.find_first_not_of(" \t", pos + 1);
-
-//    // get the data
-//    std::string strData;
-//    strData = strBuffer.substr(pos, strBuffer.find_first_of("\n\r", pos) - pos);
-
-//    // handle the model creation
-//    if(strKey == "scale")
-//    {
-//      // set rendering scale factor
-//      m_renderScale = atof(strData.c_str());
-//    }
-//    else if(strKey == "path")
-//    {
-//      // set the new path for the data files if one hasn't been set already
-//      if (m_path == "") strPath = strData;
-//    }
-//    else if(strKey == "skeleton")
-//    {
-//      // load core skeleton
-//      std::cout << "Loading skeleton '" << strData << "'..." << std::endl;
-//      if(!m_calCoreModel->loadCoreSkeleton(strPath + strData))
-//      {
-//        CalError::printLastError();
-//        return false;
-//      }
-//    }
-//    else if(strKey == "animation")
-//    {
-//      // load core animation
-//      std::cout << "Loading animation '" << strData << "'..." << std::endl;
-//      m_animationId[animationCount] = m_calCoreModel->loadCoreAnimation(strPath + strData);
-//      if(m_animationId[animationCount] == -1)
-//      {
-//        CalError::printLastError();
-//        return false;
-//      }
-
-//      animationCount++;
-//    }
-//    else if(strKey == "mesh")
-//    {
-//      // load core mesh
-//      std::cout << "Loading mesh '" << strData << "'..." << std::endl;
-//      if(m_calCoreModel->loadCoreMesh(strPath + strData) == -1)
-//      {
-//        CalError::printLastError();
-//        return false;
-//      }
-//    }
-//    else if(strKey == "material")
-//    {
-//      // load core material
-//      std::cout << "Loading material '" << strData << "'..." << std::endl;
-//      if(m_calCoreModel->loadCoreMaterial(strPath + strData) == -1)
-//      {
-//        CalError::printLastError();
-//        return false;
-//      }
-//    }
-//    else
-//    {
-//      std::cerr << strFilename << "(" << line << "): Invalid syntax." << std::endl;
-//      return false;
-//    }
-//  }
-
-//  // explicitely close the file
-//  file.close();
-
-//  // load all textures and store the opengl texture id in the corresponding map in the material
-//  int materialId;
-//  for(materialId = 0; materialId < m_calCoreModel->getCoreMaterialCount(); materialId++)
-//  {
-//    // get the core material
-//    CalCoreMaterial *pCoreMaterial;
-//    pCoreMaterial = m_calCoreModel->getCoreMaterial(materialId);
-
-//    // loop through all maps of the core material
-//    int mapId;
-//    for(mapId = 0; mapId < pCoreMaterial->getMapCount(); mapId++)
-//    {
-//      // get the filename of the texture
-//      std::string strFilename;
-//      strFilename = pCoreMaterial->getMapFilename(mapId);
-
-//      // load the texture from the file
-//      GLuint textureId;
-//      textureId = loadTexture(strPath + strFilename);
-
-//      // store the opengl texture id in the user data of the map
-//      pCoreMaterial->setMapUserData(mapId, (Cal::UserData)textureId);
-//    }
-//  }
-
-//  // make one material thread for each material
-//  // NOTE: this is not the right way to do it, but this viewer can't do the right
-//  // mapping without further information on the model etc.
-//  for(materialId = 0; materialId < m_calCoreModel->getCoreMaterialCount(); materialId++)
-//  {
-//    // create the a material thread
-//    m_calCoreModel->createCoreMaterialThread(materialId);
-
-//    // initialize the material thread
-//    m_calCoreModel->setCoreMaterialId(materialId, 0, materialId);
-//  }
 
   m_calCoreModel->scale(0.01f);
   // Calculate Bounding Boxes
@@ -420,6 +257,15 @@ void Model::renderBoundingBox()
 
 void Model::renderMesh(bool bWireframe, bool bLight)
 {
+
+    glGenVertexArrays(1, &VAO);
+    glBindVertexArray(VAO);
+    glGenBuffers(1, &VerticesBuffer);
+    glGenBuffers(1, &FacesBuffer);
+    glGenBuffers(1,&NormalsBuffer);
+    glGenBuffers(1,&ColorsBuffer);
+
+
   // get the renderer of the model
   CalRenderer *pCalRenderer;
   pCalRenderer = m_calModel->getRenderer();
@@ -467,82 +313,81 @@ void Model::renderMesh(bool bWireframe, bool bLight)
       // select mesh and submesh for further data access
       if(pCalRenderer->selectMeshSubmesh(meshId, submeshId))
       {
-        unsigned char meshColor[4];
-        GLfloat materialColor[4];
+//        unsigned char meshColor[4];
+//        GLfloat materialColor[4];
 
-        // set the material ambient color
-        pCalRenderer->getAmbientColor(&meshColor[0]);
-        materialColor[0] = meshColor[0] / 255.0f;  materialColor[1] = meshColor[1] / 255.0f; materialColor[2] = meshColor[2] / 255.0f; materialColor[3] = meshColor[3] / 255.0f;
-        glMaterialfv(GL_FRONT, GL_AMBIENT, materialColor);
+//        // set the material ambient color
+//        pCalRenderer->getAmbientColor(&meshColor[0]);
+//        materialColor[0] = meshColor[0] / 255.0f;  materialColor[1] = meshColor[1] / 255.0f; materialColor[2] = meshColor[2] / 255.0f; materialColor[3] = meshColor[3] / 255.0f;
+//        glMaterialfv(GL_FRONT, GL_AMBIENT, materialColor);
 
-        // set the material diffuse color
-        pCalRenderer->getDiffuseColor(&meshColor[0]);
-        materialColor[0] = meshColor[0] / 255.0f;  materialColor[1] = meshColor[1] / 255.0f; materialColor[2] = meshColor[2] / 255.0f; materialColor[3] = meshColor[3] / 255.0f;
-        glMaterialfv(GL_FRONT, GL_DIFFUSE, materialColor);
+//        // set the material diffuse color
+//        pCalRenderer->getDiffuseColor(&meshColor[0]);
+//        materialColor[0] = meshColor[0] / 255.0f;  materialColor[1] = meshColor[1] / 255.0f; materialColor[2] = meshColor[2] / 255.0f; materialColor[3] = meshColor[3] / 255.0f;
+//        glMaterialfv(GL_FRONT, GL_DIFFUSE, materialColor);
 
-        // set the vertex color if we have no lights
-        if(!bLight)
-        {
-          glColor4fv(materialColor);
-        }
+//        // set the vertex color if we have no lights
+//        if(!bLight)
+//        {
+//          glColor4fv(materialColor);
+//        }
 
-        // set the material specular color
-        pCalRenderer->getSpecularColor(&meshColor[0]);
-        materialColor[0] = meshColor[0] / 255.0f;  materialColor[1] = meshColor[1] / 255.0f; materialColor[2] = meshColor[2] / 255.0f; materialColor[3] = meshColor[3] / 255.0f;
-        glMaterialfv(GL_FRONT, GL_SPECULAR, materialColor);
+//        // set the material specular color
+//        pCalRenderer->getSpecularColor(&meshColor[0]);
+//        materialColor[0] = meshColor[0] / 255.0f;  materialColor[1] = meshColor[1] / 255.0f; materialColor[2] = meshColor[2] / 255.0f; materialColor[3] = meshColor[3] / 255.0f;
+//        glMaterialfv(GL_FRONT, GL_SPECULAR, materialColor);
 
-        // set the material shininess factor
-        float shininess;
-        shininess = 50.0f; //TODO: pCalRenderer->getShininess();
-        glMaterialfv(GL_FRONT, GL_SHININESS, &shininess);
+//        // set the material shininess factor
+//        float shininess;
+//        shininess = 50.0f; //TODO: pCalRenderer->getShininess();
+//        glMaterialfv(GL_FRONT, GL_SHININESS, &shininess);
 
-        // get the transformed vertices of the submesh
-        static float meshVertices[30000][3];
-        int vertexCount;
-        vertexCount = pCalRenderer->getVertices(&meshVertices[0][0]);
+//        // get the transformed vertices of the submesh
+//        static float meshVertices[30000][3];
+//        int vertexCount;
+//        vertexCount = pCalRenderer->getVertices(&meshVertices[0][0]);
 
-        // get the transformed normals of the submesh
-        static float meshNormals[30000][3];
-        pCalRenderer->getNormals(&meshNormals[0][0]);
+//        // get the transformed normals of the submesh
+//        static float meshNormals[30000][3];
+//        pCalRenderer->getNormals(&meshNormals[0][0]);
 
         // get the texture coordinates of the submesh
-        static float meshTextureCoordinates[30000][2];
-        int textureCoordinateCount;
-        textureCoordinateCount = pCalRenderer->getTextureCoordinates(0, &meshTextureCoordinates[0][0]);
+//        static float meshTextureCoordinates[30000][2];
+//        int textureCoordinateCount;
+//        textureCoordinateCount = pCalRenderer->getTextureCoordinates(0, &meshTextureCoordinates[0][0]);
 
-        // get the faces of the submesh
-        static CalIndex meshFaces[50000][3];
-        int faceCount;
-        faceCount = pCalRenderer->getFaces(&meshFaces[0][0]);
+//        // get the faces of the submesh
+//        static CalIndex meshFaces[50000][3];
+//        int faceCount;
+//        faceCount = pCalRenderer->getFaces(&meshFaces[0][0]);
 
         // set the vertex and normal buffers
-        glVertexPointer(3, GL_FLOAT, 0, &meshVertices[0][0]);
-        glNormalPointer(GL_FLOAT, 0, &meshNormals[0][0]);
+//        glVertexPointer(3, GL_FLOAT, 0, &meshVertices[0][0]);
+//        glNormalPointer(GL_FLOAT, 0, &meshNormals[0][0]);
 
-        // set the texture coordinate buffer and state if necessary
-        if((pCalRenderer->getMapCount() > 0) && (textureCoordinateCount > 0))
-        {
-          glEnable(GL_TEXTURE_2D);
-          glActiveTexture(GL_TEXTURE0);
-          glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-          glEnable(GL_COLOR_MATERIAL);
+//        // set the texture coordinate buffer and state if necessary
+//        if((pCalRenderer->getMapCount() > 0) && (textureCoordinateCount > 0))
+//        {
+//          glEnable(GL_TEXTURE_2D);
+//          glActiveTexture(GL_TEXTURE0);
+//          glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+//          glEnable(GL_COLOR_MATERIAL);
 
-          // set the texture id we stored in the map user data
-          glBindTexture(GL_TEXTURE_2D, (GLuint)(size_t)pCalRenderer->getMapUserData(0));
+//          // set the texture id we stored in the map user data
+//          glBindTexture(GL_TEXTURE_2D, (GLuint)(size_t)pCalRenderer->getMapUserData(0));
 
-          // set the texture coordinate buffer
-          glTexCoordPointer(2, GL_FLOAT, 0, &meshTextureCoordinates[0][0]);
-          glColor3f(1.0f, 1.0f, 1.0f);
-        }
+//          // set the texture coordinate buffer
+//          glTexCoordPointer(2, GL_FLOAT, 0, &meshTextureCoordinates[0][0]);
+//          glColor3f(1.0f, 1.0f, 1.0f);
+//        }
 
         // draw the submesh
 
         initBuffers(pCalRenderer);
+
         glBindVertexArray(VAO);
         glDrawElements(GL_TRIANGLES, 3*faceCount, GL_UNSIGNED_INT,(GLvoid*) 0);
         glBindVertexArray(0);
-
-
 
 
 //        if(sizeof(CalIndex)==2)
@@ -551,12 +396,12 @@ void Model::renderMesh(bool bWireframe, bool bLight)
 //			  glDrawElements(GL_TRIANGLES, faceCount * 3, GL_UNSIGNED_INT, &meshFaces[0][0]);
 
         // disable the texture coordinate state if necessary
-        if((pCalRenderer->getMapCount() > 0) && (textureCoordinateCount > 0))
-        {
-          glDisable(GL_COLOR_MATERIAL);
-          glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-          glDisable(GL_TEXTURE_2D);
-        }
+//        if((pCalRenderer->getMapCount() > 0) && (textureCoordinateCount > 0))
+//        {
+//          glDisable(GL_COLOR_MATERIAL);
+//          glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+//          glDisable(GL_TEXTURE_2D);
+//        }
 
 // DEBUG-CODE //////////////////////////////////////////////////////////////////
 /*
@@ -598,6 +443,14 @@ glEnd();
 
   // end the rendering
   pCalRenderer->endRendering();
+
+
+  glDeleteVertexArrays(1, &VAO);
+  glDeleteBuffers(1,&VerticesBuffer);
+  glDeleteBuffers(1, &FacesBuffer);
+  glDeleteBuffers(1,&NormalsBuffer);
+  glDeleteBuffers(1,&ColorsBuffer);
+
 
 }
 
@@ -665,7 +518,7 @@ void Model::onRender()
 //  }
 //  else if(theMenu.isSkeleton()==2)
 //  {
-    renderBoundingBox();
+//    renderBoundingBox();
 //  }
   
 //  // check if we need to render the mesh
@@ -783,31 +636,60 @@ void Model::setState(int state, float delay)
 
 void Model::initBuffers(CalRenderer *pCalRenderer){
 
-    glGenVertexArrays(1, &VAO);
-    glBindVertexArray(VAO);
-
-
     //VERTICES
     static float meshVertices[30000][3];
     int vertexCount = pCalRenderer->getVertices(&meshVertices[0][0]);
     vertices_array.clear();
     vertices_array.resize(vertexCount*3);
 
+    static float meshNormals[5000][3];
+    int normalCount = pCalRenderer -> getNormals(&meshNormals[0][0]);
+    normals_array.clear();
+    normals_array.resize(normalCount*3);
+
+    unsigned char meshColor[4];
+    GLfloat materialColor[3];
+    pCalRenderer->getDiffuseColor(&meshColor[0]);
+    materialColor[0] = meshColor[0] / 255.0f;  materialColor[1] = meshColor[1] / 255.0f; materialColor[2] = meshColor[2] / 255.0f;
+    colors_array.clear();
+    colors_array.resize(vertexCount*3);
+
     for(int i=0; i<vertexCount; i++){
         vertices_array[i*3]=meshVertices[i][0];
         vertices_array[i*3+1]=meshVertices[i][1];
         vertices_array[i*3+2]=meshVertices[i][2];
+
+        normals_array[i*3]=meshNormals[i][0];
+        normals_array[i*3+1]=meshNormals[i][1];
+        normals_array[i*3+2]=meshNormals[i][2];
+
+        colors_array[i*3]=materialColor[0];
+        colors_array[i*3+1]=materialColor[1];
+        colors_array[i*3+2]=materialColor[2];
     }
 
-    glGenBuffers(1, &VerticesBuffer);
     glBindBuffer(GL_ARRAY_BUFFER, VerticesBuffer);
     glBufferData(GL_ARRAY_BUFFER, 3*vertexCount*sizeof(float), &vertices_array[0], GL_STATIC_DRAW);
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (GLvoid*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3*sizeof(float), (GLvoid*)0);
+
+    //NORMALS
+    glBindBuffer(GL_ARRAY_BUFFER, NormalsBuffer);
+    glBufferData(GL_ARRAY_BUFFER, 3*normalCount*sizeof(float), &normals_array[0], GL_STATIC_DRAW);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, (GLvoid*)0);
+
+
+    //COLORS
+    glBindBuffer(GL_ARRAY_BUFFER, ColorsBuffer);
+    glBufferData(GL_ARRAY_BUFFER, 3*vertexCount*sizeof(float), &colors_array[0], GL_STATIC_DRAW);
+    glEnableVertexAttribArray(2);
+    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, (GLvoid*)0);
+
 
     //FACES
-    static CalIndex meshFaces[50000][3];
-    int faceCount = pCalRenderer->getFaces(&meshFaces[0][0]);
+    static CalIndex meshFaces[30000][3];
+    faceCount = pCalRenderer->getFaces(&meshFaces[0][0]);
     faces_array.clear();
     faces_array.resize(faceCount*3);
 
@@ -817,11 +699,12 @@ void Model::initBuffers(CalRenderer *pCalRenderer){
         faces_array[i*3+2]=meshFaces[i][2];
     }
 
-    glGenBuffers(1, &FacesBuffer);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, FacesBuffer);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, 3*faceCount*sizeof(float), &faces_array[0], GL_STATIC_DRAW);
 
 
+
     glBindBuffer(GL_ARRAY_BUFFER,0);
     glBindVertexArray(0);
+
 }

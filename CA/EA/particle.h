@@ -40,6 +40,7 @@ public:
         void addForce(glm::vec3 force);
         void addForce(const float& x, const float& y, const float& z);
         void updateParticle(const float& dt, UpdateMethod method = UpdateMethod::EulerOrig);
+        void checkCollision(Particle &p, float radius);
 
 private:
         glm::vec3 m_currentPosition;
