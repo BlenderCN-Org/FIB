@@ -9,6 +9,8 @@
 class Geometry{
     virtual void setPosition(const glm::vec3& newPos) = 0;
     virtual bool isInside(const glm::vec3& point) = 0;
+public :
+    virtual void checkCollision(Particle &p) = 0;
 };
 
 class Plane : public Geometry {

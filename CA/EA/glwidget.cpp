@@ -38,14 +38,15 @@ GLWidget::~GLWidget()
 {
     if(program) delete program;
     if(programParticles) delete programParticles;
+    if(programCharacters) delete programCharacters;
 }
 
 
 void GLWidget::createGenerator(){
 
+    initializeOpenGLFunctions();
     if(!pathfinding){
         G = Generator(nb_particles);
-        initializeOpenGLFunctions();
 
         //Init particles
         G.initBuffers();
@@ -56,10 +57,11 @@ void GLWidget::createGenerator(){
         G.plane_front.initBuffers();
         G.plane_left.initBuffers();
         G.plane_right.initBuffers();
+
     }
 
     else{
-        P = pathFinding(10,10);
+        P = pathFinding(10,10,G);
     }
 
 }
@@ -144,7 +146,6 @@ void GLWidget::paintGL()
 
     else{
         P.Display(programCharacters,proj,modelView);
-        update();
     }
 
 
@@ -225,14 +226,15 @@ void GLWidget::_tick()
 void GLWidget::setPathFinding(int sx, int sy, int gx, int gy){
     pathfinding = true;
     createGenerator();
+
     if(P.testValueX(sx) && P.testValueX(gx) && P.testValueY(sy) && P.testValueY(gy)){
-            P.startx = sx;
-            P.starty = sy;
-            P.goalx = gx;
-            P.goaly = gy;
-            P.aStar();
-            update();
-    }
+        P.startx = sx;
+        P.starty = sy;
+        P.goalx = gx;
+        P.goaly = gy;
+        P.aStar();
+        paintGL();
+}
 
 }
 

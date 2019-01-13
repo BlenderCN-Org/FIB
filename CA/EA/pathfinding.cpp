@@ -9,17 +9,19 @@ int transformCoord(int i, int j,int size_x, int size_y){
 }
 
 
-pathFinding::pathFinding(int x, int y)
+pathFinding::pathFinding(int x, int y, Generator Gene)
 {
     size_x=x;
     size_y=y;
 
     grid = Grid(x,y);
-    G = Generator(2);
+
     startx = 0;
     starty=0;
     goalx=5;
     goaly=5;
+
+    G = Gene;
 
 
 }
@@ -85,10 +87,10 @@ void pathFinding::aStar(){
     grid.reset();
 
     grid.map[goalx][goaly] = 3;
-    grid.map[3][2] = 1;
-    grid.map[7][5] = 1;
-    grid.map[8][3] = 1;
-    grid.map[4][4] = 1;
+    grid.map[3][2] = 1; G.obstacles.push_back(Sphere(glm::vec3(-size_x+1.0f+2*3,0,-size_y+1.0f+2*2),1.2f));
+    grid.map[7][5] = 1; G.obstacles.push_back(Sphere(glm::vec3(-size_x+1.0f+2*7,0,-size_y+1.0f+2*5),1.2f));
+    grid.map[8][3] = 1; G.obstacles.push_back(Sphere(glm::vec3(-size_x+1.0f+2*8,0,-size_y+1.0f+2*3),1.2f));
+    grid.map[4][4] = 1; G.obstacles.push_back(Sphere(glm::vec3(-size_x+1.0f+2*4,0,-size_y+1.0f+2*4),1.2f));
 
     node lowestNode = pQueue.top();
 
@@ -189,6 +191,7 @@ void pathFinding::aStar(){
         lowestNode = NodeList[lowestNode.Parentx][lowestNode.Parenty];
     }
 
+    G.addPathCharacter(startx,starty,size_x,size_y);
 }
 
 
@@ -201,4 +204,3 @@ bool pathFinding::testValueX(int x){
 bool pathFinding::testValueY(int y){
     return (y>=0 && y<size_y);
 }
-

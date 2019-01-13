@@ -29,8 +29,10 @@ public:
     void Update(GLfloat dt);
     //Render particles
     void Display(QOpenGLShaderProgram *program, QMatrix4x4 proj, QMatrix4x4 modelView);
+    void DisplayObstacles(QOpenGLShaderProgram *program, QMatrix4x4 proj, QMatrix4x4 modelView);
     //Init buffers for display
     void initBuffers();
+    void loadModels(std::vector<ModelData*>& models);
     std::vector<Particle> particles;
     std::vector<Model*> models;
     GLuint VAO, planeVAO;
@@ -44,12 +46,16 @@ public:
 
     std::vector<ModelData*> modelsData;
     std::vector<Model*> m_models;
-//    std::vector<Agent*> m_agents;
 
     int nb_particles;
+    std::vector<Sphere> obstacles;
+    QElapsedTimer timer;
+    bool pathfinding = false;
+    void addPathCharacter(int x, int y, int size_x, int size_y);
+    void updatePath();
+    Particle pathParticle;
 
 private:
-
 
     //Buffers
     GLuint particleBuffer, planeBuffer;
@@ -59,7 +65,6 @@ private:
     //Respawns particle
     void respawnParticle(Particle &particle);
 
-    QElapsedTimer timer;
 
 };
 

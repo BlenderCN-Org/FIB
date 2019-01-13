@@ -8,7 +8,7 @@ Generator::Generator(){
 }
 
 
-void loadModels(std::vector<ModelData*>& models)
+void Generator::loadModels(std::vector<ModelData*>& models)
 {
 
     ModelData* data;
@@ -42,6 +42,7 @@ Generator::Generator(int nb_particles) :
 
     particles.clear();
     models.clear();
+    obstacles.clear();
 //    this->initBuffers();
 
     // preload models
@@ -73,6 +74,7 @@ Generator::Generator(int nb_particles) :
     plane_left = Plane(glm::vec3(-10,0,0),glm::vec3(1,0,0));
     plane_front = Plane(glm::vec3(0,0,10),glm::vec3(0,0,-1));
     plane_bottom = Plane(glm::vec3(0,0,-10),glm::vec3(0,0,1));
+
 
 }
 
@@ -127,8 +129,6 @@ void Generator::Update(GLfloat dt){
 
      //Add new particles
     for (int i=0; i<2; i++){
-        int unusedParticle = firstUnusedParticle();
-        respawnParticle(particles[unusedParticle]);
         if(particles.size() < nb_particles){
             particles.push_back(Particle(glm::vec3(0,0,0),glm::vec3(rand01()+0.5f,0.0f,rand01()+0.5f),1.0f,false,rand01()*life,glm::vec3(0)));
             models.push_back(m_models[rand()%(m_models.size())]);
@@ -137,20 +137,6 @@ void Generator::Update(GLfloat dt){
 
     //Update particles
     for (int i=0; i<particles.size(); i++){
-//        particles[i].setLifetime(particles[i].getLifetime()-dt);
-
-//        if (particles[i].getLifetime()>0.0f){
-
-
-            if(method == Particle::UpdateMethod::Verlet)
-            {
-                if(particles[i].getLifetime() > (life - dt))
-                {
-                    glm::vec3 ini_pos = particles[i].getCurrentPosition();
-                    glm::vec3 ini_vel = particles[i].getVelocity();
-                    particles[i].setPreviousPosition(ini_pos.x - (ini_vel.x)*dt, ini_pos.y - (ini_vel.y)*dt, ini_pos.z - (ini_vel.z)*dt);
-                }
-            }
 
             particles[i].updateParticle(dt,method);
 
@@ -162,31 +148,22 @@ void Generator::Update(GLfloat dt){
             plane_bottom.checkCollision(particles[i]);
             plane_front.checkCollision(particles[i]);
 
+            for(int j=0; j<obstacles.size(); j++){
+                obstacles[j].checkCollision(particles[i]);
+            }
+
             //Check collisions with other particles
             for(int j=1; j<particles.size() ; j++){
                 if(i!=j) particles[i].checkCollision(particles[j],radius);
             }
 
-
-//        }
-
-//        else{
-//            respawnParticle(particles[i]);
-//        }
-
-
     }
-
 }
 
 
 
 
 void Generator::Display(QOpenGLShaderProgram *program, QMatrix4x4 proj, QMatrix4x4 modelView){
-
-//    float time = timer.elapsed() / 1000.0f;
-//    std::cout << time << std::endl;
-
 
     glClear(GL_DEPTH_BUFFER_BIT);
 
@@ -197,25 +174,40 @@ void Generator::Display(QOpenGLShaderProgram *program, QMatrix4x4 proj, QMatrix4
 
     Update(0.01f);
 
+
     QMatrix4x4 MVtemp = modelView;
 
-    for(int i =1; i<particles.size(); i++){
+    for(int i=0; i<particles.size(); i++){
 
-        MVtemp.translate(particles[i].getCurrentPosition().x,particles[i].getCurrentPosition().y,particles[i].getCurrentPosition().z);
-        MVtemp.rotate(90,QVector3D(-1,0,0));
+        if(i!=0){
+            MVtemp.translate(particles[i].getCurrentPosition().x,particles[i].getCurrentPosition().y,particles[i].getCurrentPosition().z);
+            MVtemp.rotate(90,QVector3D(-1,0,0));
 
-        float angle = atan2(particles[i].getVelocity().x,particles[i].getVelocity().z)*180/M_PI;
-        MVtemp.rotate(angle,QVector3D(0,0,1));
+            float angle = atan2(particles[i].getVelocity().x,particles[i].getVelocity().z)*180/M_PI;
+            MVtemp.rotate(angle,QVector3D(0,0,1));
 
 
-        program->setUniformValue("modelview", MVtemp);
-        models[i]->setState(2,0.0f);
+            program->setUniformValue("modelview", MVtemp);
+            models[i]->setState(2,0.0f);
 
-        models[i]->onUpdate(timer.elapsed() / (1000.0*glm::length(particles[i].getVelocity())));
-        models[i]->onRender();
-        MVtemp=modelView;
+            models[i]->onUpdate(timer.elapsed() / (1000.0*glm::length(particles[i].getVelocity())));
+            models[i]->onRender();
+            MVtemp=modelView;
+        }
     }
 
+    if(pathfinding){
+        MVtemp.translate(pathParticle.getCurrentPosition().x,pathParticle.getCurrentPosition().y,pathParticle.getCurrentPosition().z);
+        MVtemp.rotate(90,QVector3D(-1,0,0));
+
+        float angle = atan2(pathParticle.getVelocity().x,pathParticle.getVelocity().z)*180/M_PI;
+        MVtemp.rotate(angle,QVector3D(0,0,1));
+
+        program->setUniformValue("modelview", MVtemp);
+
+        models[0]->onRender();
+        MVtemp=modelView;
+    }
 
 
     program->release();
@@ -226,6 +218,27 @@ void Generator::Display(QOpenGLShaderProgram *program, QMatrix4x4 proj, QMatrix4
 
 
 
+void Generator::DisplayObstacles(QOpenGLShaderProgram *program, QMatrix4x4 proj, QMatrix4x4 modelView){
+
+    for(int i=0; i<obstacles.size();i++){
+        obstacles[i].Display(program,proj,modelView);
+    }
+}
+
+
+
+
+void Generator::addPathCharacter(int x, int y, int size_x, int size_y){
+    pathfinding = true;
+    pathParticle=Particle(glm::vec3(-size_x+2*x+1.0f,0,-size_y+2*y+1.0f),glm::vec3(0),1.0f,false,0,glm::vec3(0));
+
+}
+
+
+
+void Generator::updatePath(){
+
+}
 
 
 

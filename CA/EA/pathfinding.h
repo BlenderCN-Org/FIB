@@ -29,7 +29,7 @@ class pathFinding
 {
 public:
     pathFinding(){}
-    pathFinding(int x, int y);
+    pathFinding(int x, int y, Generator Gene);
 
     Grid grid;
     Generator G;
