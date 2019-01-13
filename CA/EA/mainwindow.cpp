@@ -22,4 +22,11 @@ void MainWindow::on_action_Quit_triggered()
 }
 
 
-
+void MainWindow::on_PathFinding_clicked()
+{
+    int startx = ui->startX->value();
+    int starty = ui->startY->value();
+    int goalx = ui->goalX->value();
+    int goaly = ui->goalY -> value();
+    ui->openGLWidget->setPathFinding(startx, starty, goalx, goaly);
+}

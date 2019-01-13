@@ -1,4 +1,4 @@
-#include "ModelLoader.h"
+#include "modelloader.h"
 #include "tga.h"
 #include <glm.hpp>
 #include <limits>
@@ -120,7 +120,7 @@ GLuint ModelLoader::loadTexture(const std::string& strFilename)
 bool ModelLoader::loadModel(ModelData* data, const std::string& name,
                             const std::string& path, const std::string& strFilename)
 {
-  CalCoreModel* m_calCoreModel = new CalCoreModel(name);
+  cal3d::CalCoreModel* m_calCoreModel = new cal3d::CalCoreModel(name);
   data->coreModel = m_calCoreModel;
 
   // open the model configuration file
@@ -206,7 +206,7 @@ bool ModelLoader::loadModel(ModelData* data, const std::string& name,
       std::cout << "Loading skeleton '" << strData << "'..." << std::endl;
       if(!m_calCoreModel->loadCoreSkeleton(strPath + strData))
       {
-        CalError::printLastError();
+        cal3d::CalError::printLastError();
         return false;
       }
     }
@@ -217,7 +217,7 @@ bool ModelLoader::loadModel(ModelData* data, const std::string& name,
       data->animationIds.push_back(m_calCoreModel->loadCoreAnimation(strPath + strData));
       if(data->animationIds[animationCount] == -1)
       {
-        CalError::printLastError();
+        cal3d::CalError::printLastError();
         return false;
       }
 
@@ -229,7 +229,7 @@ bool ModelLoader::loadModel(ModelData* data, const std::string& name,
       std::cout << "Loading mesh '" << strData << "'..." << std::endl;
       if(m_calCoreModel->loadCoreMesh(strPath + strData) == -1)
       {
-        CalError::printLastError();
+        cal3d::CalError::printLastError();
         return false;
       }
     }
@@ -239,7 +239,7 @@ bool ModelLoader::loadModel(ModelData* data, const std::string& name,
       std::cout << "Loading material '" << strData << "'..." << std::endl;
       if(m_calCoreModel->loadCoreMaterial(strPath + strData) == -1)
       {
-        CalError::printLastError();
+        cal3d::CalError::printLastError();
         return false;
       }
     }
@@ -258,7 +258,7 @@ bool ModelLoader::loadModel(ModelData* data, const std::string& name,
   for(materialId = 0; materialId < m_calCoreModel->getCoreMaterialCount(); materialId++)
   {
     // get the core material
-    CalCoreMaterial *pCoreMaterial;
+    cal3d::CalCoreMaterial *pCoreMaterial;
     pCoreMaterial = m_calCoreModel->getCoreMaterial(materialId);
 
     // loop through all maps of the core material

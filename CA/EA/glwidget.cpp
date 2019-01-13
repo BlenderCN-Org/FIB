@@ -60,7 +60,6 @@ void GLWidget::createGenerator(){
 
     else{
         P = pathFinding(10,10);
-        P.aStar();
     }
 
 }
@@ -218,6 +217,22 @@ void GLWidget::_tick()
 {
     update();
     QTimer::singleShot(5, this, SLOT(_tick()));
+
+}
+
+
+
+void GLWidget::setPathFinding(int sx, int sy, int gx, int gy){
+    pathfinding = true;
+    createGenerator();
+    if(P.testValueX(sx) && P.testValueX(gx) && P.testValueY(sy) && P.testValueY(gy)){
+            P.startx = sx;
+            P.starty = sy;
+            P.goalx = gx;
+            P.goaly = gy;
+            P.aStar();
+            update();
+    }
 
 }
 

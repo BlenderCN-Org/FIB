@@ -62,10 +62,11 @@ private:
     GLuint VAO;
     GLuint particleBuffer = 0;
 
-    bool pathfinding = true;
+    bool pathfinding = false;
 
 public slots:
     void _tick();
+    void setPathFinding(int sx, int sy, int gx, int gy);
 
 
 };

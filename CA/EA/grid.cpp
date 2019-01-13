@@ -29,6 +29,16 @@ Grid::~Grid()
 }
 
 
+void Grid::reset(){
+    map.clear();
+
+    map.resize(size_x);
+    for ( int i = 0 ; i < size_x ; i++ )
+       map[i].resize(size_y);
+
+}
+
+
 void Grid::Display(QMatrix4x4 proj, QMatrix4x4 modelView)
 {
     program->bind();
@@ -53,9 +63,37 @@ void Grid::Display(QMatrix4x4 proj, QMatrix4x4 modelView)
                 MVtemp=modelView;
             }
 
-            else{
+
+            else if(map[i][j]==2){  //COLOR IN BLUE (PATH)
                 glPolygonMode( GL_FRONT_AND_BACK, GL_FILL);
-                MVtemp.translate(-size_x-0.5f+2*i,0,-size_y-0.5f+2*j);
+                MVtemp.translate(-size_x+2*i+1.0f,0,-size_y+2*j+1.0f);
+                program->setUniformValue("modelview",MVtemp);
+                program->setUniformValue("color",0.0,0.2,0.8,0.8);
+
+                glBindVertexArray(ground.planeVAO);
+                glDrawArrays(GL_TRIANGLE_FAN,0,4);
+                glBindVertexArray(0);
+
+                MVtemp=modelView;
+            }
+
+
+            else if(map[i][j]==3){  //COLOR IN GREEN (GOAL)
+                glPolygonMode( GL_FRONT_AND_BACK, GL_FILL);
+                MVtemp.translate(-size_x+2*i+1.0f,0,-size_y+2*j+1.0f);
+                program->setUniformValue("modelview",MVtemp);
+                program->setUniformValue("color",0.0,0.8,0.2,1.0);
+
+                glBindVertexArray(ground.planeVAO);
+                glDrawArrays(GL_TRIANGLE_FAN,0,4);
+                glBindVertexArray(0);
+
+                MVtemp=modelView;
+            }
+
+            else{  //COLOR IN RED
+                glPolygonMode( GL_FRONT_AND_BACK, GL_FILL);
+                MVtemp.translate(-size_x+2*i+1.0f,0,-size_y+2*j+1.0f);
                 program->setUniformValue("modelview",MVtemp);
                 program->setUniformValue("color",1.0,0.0,0.0,1.0);
 

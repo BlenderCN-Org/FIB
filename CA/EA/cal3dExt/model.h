@@ -15,7 +15,7 @@
 // Includes                                                                   //
 //----------------------------------------------------------------------------//
 
-#include "global.h"
+#include "cal3d/global.h"
 #include "cal3d/cal3d.h"
 #include <QOpenGLFunctions>
 #include <QOpenGLShaderProgram>
@@ -36,8 +36,8 @@ public:
 // member variables
 protected:
   int m_state;
-  CalCoreModel* m_calCoreModel;
-  CalModel* m_calModel;
+  cal3d::CalCoreModel* m_calCoreModel;
+  cal3d::CalModel* m_calModel;
 //  int m_animationId[16];
   std::vector<int> m_animationId;
   int m_animationCount;
@@ -73,7 +73,7 @@ public:
 
   float getModelScale();
   void  setModelScale(float s);
-  void  setCoreModel(CalCoreModel* coremodel);
+  void  setCoreModel(cal3d::CalCoreModel* coremodel);
   void  setAnimationIds(const std::vector<int>& animationIds);
 
 
@@ -91,7 +91,7 @@ protected:
   void renderSkeleton();
   void renderBoundingBox();
 
-  void initBuffers(CalRenderer *pCalRenderer);
+  void initBuffers(cal3d::CalRenderer *pCalRenderer);
 
   GLuint VAO, VerticesBuffer, FacesBuffer, NormalsBuffer, ColorsBuffer;
   std::vector<float> vertices_array,normals_array,colors_array;
@@ -114,7 +114,7 @@ inline float Model::getModelScale() {
 //    bmax[2] = m_bbMax[2];
 //}
 
-inline void Model::setCoreModel(CalCoreModel* coremodel) {
+inline void Model::setCoreModel(cal3d::CalCoreModel* coremodel) {
     m_calCoreModel = coremodel;
 }
 

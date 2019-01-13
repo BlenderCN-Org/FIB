@@ -16,8 +16,12 @@
 #pragma warning(disable : 4786)
 #endif
 
-#include "model.h"
+#include <QOpenGLFunctions>
+
+#include "cal3dExt/model.h"
+#include "cal3d/model.h"
 #include "tga.h"
+
 
 //----------------------------------------------------------------------------//
 // Static member variables initialization                                     //
@@ -33,7 +37,7 @@ const int Model::STATE_MOTION = 2;
 
 Model::Model()
 {
-  m_calCoreModel = new CalCoreModel("dummy");
+  m_calCoreModel = new cal3d::CalCoreModel("dummy");
 
   m_state = STATE_IDLE;
   m_motionBlend[0] = 0.6f;
@@ -123,7 +127,7 @@ bool Model::onInit()
 
   m_calCoreModel->getCoreSkeleton()->calculateBoundingBoxes(m_calCoreModel);
 
-  m_calModel = new CalModel(m_calCoreModel);
+  m_calModel = new cal3d::CalModel(m_calCoreModel);
 
   // attach all meshes to the model
   int meshId;
@@ -150,40 +154,40 @@ bool Model::onInit()
 
 void Model::renderSkeleton()
 {
-  // draw the bone lines
-  float lines[1024][2][3];
-  int nrLines;
-  nrLines =  m_calModel->getSkeleton()->getBoneLines(&lines[0][0][0]);
-//  nrLines = m_calModel->getSkeleton()->getBoneLinesStatic(&lines[0][0][0]);
+//  // draw the bone lines
+//  float lines[1024][2][3];
+//  int nrLines;
+//  nrLines =  m_calModel->getSkeleton()->getBoneLines(&lines[0][0][0]);
+////  nrLines = m_calModel->getSkeleton()->getBoneLinesStatic(&lines[0][0][0]);
 
-  glLineWidth(3.0f);
-  glColor3f(1.0f, 1.0f, 1.0f);
-  glBegin(GL_LINES);
-    int currLine;
-    for(currLine = 0; currLine < nrLines; currLine++)
-    {
-      glVertex3f(lines[currLine][0][0], lines[currLine][0][1], lines[currLine][0][2]);
-      glVertex3f(lines[currLine][1][0], lines[currLine][1][1], lines[currLine][1][2]);
-    }
-  glEnd();
-  glLineWidth(1.0f);
+//  glLineWidth(3.0f);
+//  glColor3f(1.0f, 1.0f, 1.0f);
+//  glBegin(GL_LINES);
+//    int currLine;
+//    for(currLine = 0; currLine < nrLines; currLine++)
+//    {
+//      glVertex3f(lines[currLine][0][0], lines[currLine][0][1], lines[currLine][0][2]);
+//      glVertex3f(lines[currLine][1][0], lines[currLine][1][1], lines[currLine][1][2]);
+//    }
+//  glEnd();
+//  glLineWidth(1.0f);
 
-  // draw the bone points
-  float points[1024][3];
-  int nrPoints;
-  nrPoints =  m_calModel->getSkeleton()->getBonePoints(&points[0][0]);
-//  nrPoints = m_calModel->getSkeleton()->getBonePointsStatic(&points[0][0]);
+//  // draw the bone points
+//  float points[1024][3];
+//  int nrPoints;
+//  nrPoints =  m_calModel->getSkeleton()->getBonePoints(&points[0][0]);
+////  nrPoints = m_calModel->getSkeleton()->getBonePointsStatic(&points[0][0]);
 
-  glPointSize(4.0f);
-  glBegin(GL_POINTS);
-    glColor3f(0.0f, 0.0f, 1.0f);
-    int currPoint;
-    for(currPoint = 0; currPoint < nrPoints; currPoint++)
-    {
-      glVertex3f(points[currPoint][0], points[currPoint][1], points[currPoint][2]);
-    }
-  glEnd();
-  glPointSize(1.0f);
+//  glPointSize(4.0f);
+//  glBegin(GL_POINTS);
+//    glColor3f(0.0f, 0.0f, 1.0f);
+//    int currPoint;
+//    for(currPoint = 0; currPoint < nrPoints; currPoint++)
+//    {
+//      glVertex3f(points[currPoint][0], points[currPoint][1], points[currPoint][2]);
+//    }
+//  glEnd();
+//  glPointSize(1.0f);
 }
 
 //----------------------------------------------------------------------------//
@@ -191,62 +195,62 @@ void Model::renderSkeleton()
 //----------------------------------------------------------------------------//
 
 void Model::renderBoundingBox()
-{  
+{
 
-   CalSkeleton *pCalSkeleton = m_calModel->getSkeleton();
+//   cal3d::CalSkeleton *pCalSkeleton = m_calModel->getSkeleton();
 
-   std::vector<CalBone*> &vectorCoreBone = pCalSkeleton->getVectorBone();
+//   std::vector<cal3d::CalBone*> &vectorCoreBone = pCalSkeleton->getVectorBone();
 
-   glColor3f(1.0f, 1.0f, 1.0f);
-   glBegin(GL_LINES);      
+//   glColor3f(1.0f, 1.0f, 1.0f);
+//   glBegin(GL_LINES);
 
-   for(size_t boneId=0;boneId<vectorCoreBone.size();++boneId)
-   {
-      CalBoundingBox & calBoundingBox  = vectorCoreBone[boneId]->getBoundingBox();
+//   for(size_t boneId=0;boneId<vectorCoreBone.size();++boneId)
+//   {
+//      cal3d::CalBoundingBox & calBoundingBox  = vectorCoreBone[boneId]->getBoundingBox();
 
-	  CalVector p[8];
-	  calBoundingBox.computePoints(p);
+//      cal3d::CalVector p[8];
+//	  calBoundingBox.computePoints(p);
 
-	  
-	  glVertex3f(p[0].x,p[0].y,p[0].z);
-	  glVertex3f(p[1].x,p[1].y,p[1].z);
 
-	  glVertex3f(p[0].x,p[0].y,p[0].z);
-	  glVertex3f(p[2].x,p[2].y,p[2].z);
+//	  glVertex3f(p[0].x,p[0].y,p[0].z);
+//	  glVertex3f(p[1].x,p[1].y,p[1].z);
 
-	  glVertex3f(p[1].x,p[1].y,p[1].z);
-	  glVertex3f(p[3].x,p[3].y,p[3].z);
+//	  glVertex3f(p[0].x,p[0].y,p[0].z);
+//	  glVertex3f(p[2].x,p[2].y,p[2].z);
 
-	  glVertex3f(p[2].x,p[2].y,p[2].z);
-	  glVertex3f(p[3].x,p[3].y,p[3].z);
+//	  glVertex3f(p[1].x,p[1].y,p[1].z);
+//	  glVertex3f(p[3].x,p[3].y,p[3].z);
 
-  	  glVertex3f(p[4].x,p[4].y,p[4].z);
-	  glVertex3f(p[5].x,p[5].y,p[5].z);
+//	  glVertex3f(p[2].x,p[2].y,p[2].z);
+//	  glVertex3f(p[3].x,p[3].y,p[3].z);
 
-	  glVertex3f(p[4].x,p[4].y,p[4].z);
-	  glVertex3f(p[6].x,p[6].y,p[6].z);
+//  	  glVertex3f(p[4].x,p[4].y,p[4].z);
+//	  glVertex3f(p[5].x,p[5].y,p[5].z);
 
-	  glVertex3f(p[5].x,p[5].y,p[5].z);
-	  glVertex3f(p[7].x,p[7].y,p[7].z);
+//	  glVertex3f(p[4].x,p[4].y,p[4].z);
+//	  glVertex3f(p[6].x,p[6].y,p[6].z);
 
-	  glVertex3f(p[6].x,p[6].y,p[6].z);
-	  glVertex3f(p[7].x,p[7].y,p[7].z);
+//	  glVertex3f(p[5].x,p[5].y,p[5].z);
+//	  glVertex3f(p[7].x,p[7].y,p[7].z);
 
-	  glVertex3f(p[0].x,p[0].y,p[0].z);
-	  glVertex3f(p[4].x,p[4].y,p[4].z);
+//	  glVertex3f(p[6].x,p[6].y,p[6].z);
+//	  glVertex3f(p[7].x,p[7].y,p[7].z);
 
-	  glVertex3f(p[1].x,p[1].y,p[1].z);
-	  glVertex3f(p[5].x,p[5].y,p[5].z);
+//	  glVertex3f(p[0].x,p[0].y,p[0].z);
+//	  glVertex3f(p[4].x,p[4].y,p[4].z);
 
-	  glVertex3f(p[2].x,p[2].y,p[2].z);
-	  glVertex3f(p[6].x,p[6].y,p[6].z);
+//	  glVertex3f(p[1].x,p[1].y,p[1].z);
+//	  glVertex3f(p[5].x,p[5].y,p[5].z);
 
-	  glVertex3f(p[3].x,p[3].y,p[3].z);
-	  glVertex3f(p[7].x,p[7].y,p[7].z);  
+//	  glVertex3f(p[2].x,p[2].y,p[2].z);
+//	  glVertex3f(p[6].x,p[6].y,p[6].z);
 
-   }
+//	  glVertex3f(p[3].x,p[3].y,p[3].z);
+//	  glVertex3f(p[7].x,p[7].y,p[7].z);
 
-   glEnd();
+//   }
+
+//   glEnd();
 
 }
 
@@ -267,7 +271,7 @@ void Model::renderMesh(bool bWireframe, bool bLight)
 
 
   // get the renderer of the model
-  CalRenderer *pCalRenderer;
+  cal3d::CalRenderer *pCalRenderer;
   pCalRenderer = m_calModel->getRenderer();
 
   // begin the rendering loop
@@ -509,7 +513,7 @@ void Model::onRender()
   // Also remember that you need to call calculateBoundingBoxes()
 
   //m_calModel->getSpringSystem()->setForceVector(CalVector(0.0f,0.0f,0.0f));
-  //m_calModel->getSpringSystem()->setCollisionDetection(true);  
+  //m_calModel->getSpringSystem()->setCollisionDetection(true);
 
 //  // check if we need to render the skeleton
 //  if(theMenu.isSkeleton()==1)
@@ -520,7 +524,7 @@ void Model::onRender()
 //  {
 //    renderBoundingBox();
 //  }
-  
+
 //  // check if we need to render the mesh
 //  if(theMenu.isSkeleton()==0 || theMenu.isWireframe())
 //  {
@@ -634,7 +638,7 @@ void Model::setState(int state, float delay)
 ////----------------------------------------------------------------------------//
 
 
-void Model::initBuffers(CalRenderer *pCalRenderer){
+void Model::initBuffers(cal3d::CalRenderer *pCalRenderer){
 
     //VERTICES
     static float meshVertices[30000][3];

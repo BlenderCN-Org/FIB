@@ -10,7 +10,7 @@
 class ModelData
 {
 public:
-    CalCoreModel*	 coreModel;
+    cal3d::CalCoreModel*	 coreModel;
     std::vector<int> animationIds;
     float			 renderScale;
 };

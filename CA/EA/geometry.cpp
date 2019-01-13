@@ -103,7 +103,7 @@ void Plane::Display(QOpenGLShaderProgram *program, QMatrix4x4 proj, QMatrix4x4 m
     glm::vec3 position = -dconst*normal;
 
     modelView.translate(position.x,position.y,position.z);
-    modelView.scale(5,5,5);
+    modelView.scale(10,10,10);
     modelView.rotate(-normal.x*90,0.0f,0.0f,1.0f);
     modelView.rotate(normal.z*90,1.0f,0.0f,0.0f);
 

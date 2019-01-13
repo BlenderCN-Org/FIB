@@ -12,15 +12,15 @@ public:
     Grid(){}
     Grid(int x, int y);
     ~Grid();
-
-    int size_x;
-    int size_y;
-
+    void reset();
     void Display(QMatrix4x4 proj, QMatrix4x4 modelView);
+    std::vector<std::vector<int>> map;
 
 private:
     Plane ground;
-    std::vector<std::vector<int>> map;
+    int size_x;
+    int size_y;
+
     QOpenGLShaderProgram *program;
 };
 

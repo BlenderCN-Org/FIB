@@ -18,6 +18,7 @@ public:
 private slots:
 	void on_action_Quit_triggered();
 
+    void on_PathFinding_clicked();
 
 private:
 	Ui::MainWindow *ui;

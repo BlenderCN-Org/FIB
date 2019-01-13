@@ -38,13 +38,17 @@ public:
     void initNodes();
     void aStar();
 
-private:
-    int size_x;
-    int size_y;
+    bool testValueX(int x);
+    bool testValueY(int y);
+
     int startx;
     int starty;
     int goalx;
     int goaly;
+    int size_x;
+    int size_y;
+
+private:
 
     std::priority_queue<node> pQueue;
     std::vector<std::vector<node>> NodeList;
