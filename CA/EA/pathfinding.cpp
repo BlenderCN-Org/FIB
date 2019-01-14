@@ -205,7 +205,7 @@ void pathFinding::aStar(){
 
 
 
-
+//Test if values chosen in the interface are correct
 bool pathFinding::testValueX(int x){
     return (x>=0 && x<size_x);
 }

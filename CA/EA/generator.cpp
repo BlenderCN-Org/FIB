@@ -43,7 +43,6 @@ Generator::Generator(int nb_particles) :
     particles.clear();
     models.clear();
     obstacles.clear();
-//    this->initBuffers();
 
     // preload models
     loadModels(modelsData);
@@ -55,13 +54,10 @@ Generator::Generator(int nb_particles) :
 
     for(int i=0; i<NUM_MODELS; i++){
         Model* m = new Model();
-//        glm::vec3 blend = glm::normalize(glm::vec3(rand01(), rand01(), rand01()));
         m->setCoreModel(modelsData[i]->coreModel);
         m->setAnimationIds(modelsData[i]->animationIds);
         m->setModelScale(modelsData[i]->renderScale);
         m->onInit();
-////        m->setMotionBlend(&blend[i], 0);
-//        m->onUpdate(10*rand01());
         m->setLodLevel(0.5f);
         m_models.push_back(m);
     }
@@ -80,57 +76,14 @@ Generator::Generator(int nb_particles) :
 
 
 
-void Generator::initBuffers(){
-
-
-}
-
-
-//Find the index of the first unused particle
-int lastUsedParticle = 0;
-int Generator::firstUnusedParticle(){
-
-    //Search from last used particle
-    for(int i=lastUsedParticle; i < particles.size(); i++){
-        if(particles[i].getLifetime() < 0){
-            lastUsedParticle=i;
-            return i;
-        }
-    }
-
-    for(int i=0; i<lastUsedParticle; i++){
-        if (particles[i].getLifetime() < 0){
-            lastUsedParticle = i;
-            return i;
-        }
-    }
-
-    //If all particles are alive, override the first one
-    lastUsedParticle = 0;
-    return 0;
-
-}
-
-
-void Generator::respawnParticle(Particle &particle){
-
-    particle.setPosition(glm::vec3(0,0,0));
-    particle.setVelocity(rand01()+0.5f,0.0f,rand01()+0.5f);
-    particle.setLifetime(life);
-    particle.setForce(glm::vec3(0));
-
-
-}
-
-
-
-
 void Generator::Update(GLfloat dt){
 
      //Add new particles
     for (int i=0; i<2; i++){
         if(particles.size() < nb_particles){
-            particles.push_back(Particle(glm::vec3(0,0,0),glm::vec3(rand01()+0.5f,0.0f,rand01()+0.5f),1.0f,false,rand01()*life,glm::vec3(0)));
+            Particle newP = Particle(glm::vec3(0,0,0),glm::vec3(rand01()+0.5f,0.0f,rand01()+0.5f),1.0f,false,rand01()*life,glm::vec3(0));
+            newP.currentAngle = atan2(newP.getVelocity().x,newP.getVelocity().z)*180/M_PI;
+            particles.push_back(newP);
             models.push_back(m_models[rand()%(m_models.size())]);
         }
     }
@@ -155,7 +108,11 @@ void Generator::Update(GLfloat dt){
             //Check collisions with other particles
             for(int j=1; j<particles.size() ; j++){
                 if(i!=j) particles[i].checkCollision(particles[j],radius);
+                particles[i].checkCollision(pathParticle,radius);
             }
+
+            //Check steering
+            checkSteering(particles[i], i);
 
     }
 }
@@ -177,33 +134,33 @@ void Generator::Display(QOpenGLShaderProgram *program, QMatrix4x4 proj, QMatrix4
 
     QMatrix4x4 MVtemp = modelView;
 
-    for(int i=0; i<particles.size(); i++){
+    for(int i=0; i<particles.size(); i++){  //Update of the walking characters around
 
         if(i!=0){
             MVtemp.translate(particles[i].getCurrentPosition().x,particles[i].getCurrentPosition().y,particles[i].getCurrentPosition().z);
             MVtemp.rotate(90,QVector3D(-1,0,0));
 
             float angle = atan2(particles[i].getVelocity().x,particles[i].getVelocity().z)*180/M_PI;
-            MVtemp.rotate(angle,QVector3D(0,0,1));
-
+            float newA = updateAngle(particles[i],angle);
+            MVtemp.rotate(newA,QVector3D(0,0,1));
 
             program->setUniformValue("modelview", MVtemp);
             models[i]->setState(2,0.0f);
 
-            models[i]->onUpdate(timer.elapsed() / (1000.0*glm::length(particles[i].getVelocity())));
+            models[i]->onUpdate(timer.elapsed() / (1500.0f*glm::length(particles[i].getVelocity())));
             models[i]->onRender();
             MVtemp=modelView;
         }
     }
 
-    if(pathfinding){
+    if(pathfinding){  //Update of the character moving along the way  (only if pathfinding is activated)
         updatePath();
 
         MVtemp.translate(pathParticle.getCurrentPosition().x,pathParticle.getCurrentPosition().y,pathParticle.getCurrentPosition().z);
         MVtemp.rotate(90,QVector3D(-1,0,0));
 
         float angle = atan2(pathParticle.getVelocity().x,pathParticle.getVelocity().z)*180/M_PI;
-        MVtemp.rotate(angle,QVector3D(0,0,1));
+        MVtemp.rotate(updateAngle(pathParticle,angle),QVector3D(0,0,1));
 
         program->setUniformValue("modelview", MVtemp);
 
@@ -219,32 +176,45 @@ void Generator::Display(QOpenGLShaderProgram *program, QMatrix4x4 proj, QMatrix4
 }
 
 
+//Update smoothly the change of directions
+float Generator::updateAngle(Particle& P, float angle){
+    float CA = P.currentAngle;
+    float newA;
 
-void Generator::DisplayObstacles(QOpenGLShaderProgram *program, QMatrix4x4 proj, QMatrix4x4 modelView){
-
-    for(int i=0; i<obstacles.size();i++){
-        obstacles[i].Display(program,proj,modelView);
+    if(abs(angle-CA)>2.0f){
+        if(abs(angle-CA)>180)
+            newA = CA - (360-(angle-CA))/20.0;
+        else
+            newA = CA + (angle-CA)/20.0;
+        P.currentAngle = newA;
     }
+    else{
+        newA = angle;
+        P.currentAngle=newA;
+    }
+    return newA;
+
 }
 
 
 
-
+//Add the character that follows the path
 void Generator::addPathCharacter(int x, int y){
     pathfinding = true;
     pathParticle=Particle(glm::vec3(-size_x+2*x+1.0f,0,-size_y+2*y+1.0f),glm::vec3(1,0,0),1.0f,false,1.0,glm::vec3(0));
+    pathParticle.currentAngle=atan2(pathParticle.getVelocity().x,pathParticle.getVelocity().z)*180/M_PI;
+    startx=x;
+    starty=y;
     updatePath();
 
 }
 
 
-
+//Follow the waypoints along the path
 void Generator::updatePath(){
 
     int next_x = Path[Path.size()-2*(current_id+1)];
     int next_y = Path[Path.size()-2*(current_id+1)+1];
-
-    std::cout << "x:  " << next_x << " -  y:  " << next_y << std::endl;
 
     glm::vec3 currentPos = pathParticle.getCurrentPosition();
 
@@ -258,16 +228,83 @@ void Generator::updatePath(){
     float distance = glm::length(targetPos-currentPos);
 
     if(distance-prevDist >0)
-        std::cout << "muy mal" << std::endl;
-//    std::cout << distance << std::endl;
     if(distance < 0.5f){
         if(current_id < (Path.size()/2-1))
             current_id+=1;
-        else
+        else{
             current_id=0;
+            pathParticle.setPosition(glm::vec3(-size_x+2*startx+1.0f,0,-size_y+2*starty+1.0f));
+        }
+    }
+}
+
+
+
+//Update steering behavior
+void Generator::checkSteering(Particle &P, int id){
+
+    glm::vec3 farPos = P.getCurrentPosition() + glm::normalize(P.getVelocity())*MaxAhead;
+    glm::vec3 closePos = P.getCurrentPosition() + glm::normalize(P.getVelocity())*(MaxAhead/2.0f);
+
+    bool flagParticles = false;
+    bool flagObstacles = false;
+    int idParticle, idObstacle;
+
+    for(int i=0; i<obstacles.size(); i++){
+
+        float radius = obstacles[i].radi + 0.5f;
+        glm::vec3 obsPos = obstacles[i].center;
+        float dist1 = glm::length(farPos - obsPos);
+        float dist2 = glm::length(closePos - obsPos);
+
+        if(dist2<radius){
+            flagObstacles=true;
+            idObstacle = i;
+        }
+
+        if(dist1<radius){
+            flagObstacles=true;
+            idObstacle = i;
+        }
+
     }
 
-//    std::cout << current_id << std::endl;
+    for(int i=1; i<particles.size(); i++){
+
+        if(i!=id){
+            float radius = 1.0f;
+            glm::vec3 obsPos = particles[i].getCurrentPosition();
+            float dist1 = glm::length(farPos - obsPos);
+            float dist2 = glm::length(closePos - obsPos);
+
+            if(dist2<radius){ //If there is no collision (far detection)
+                flagParticles=true;
+                idParticle = i;
+            }
+
+            if(dist1<radius){  //If there is collision (close detection)
+                flagParticles=true;
+                idParticle = i;
+            }
+        }
+
+    }
+
+
+    if(flagObstacles){
+        float normV = glm::length(P.getVelocity());
+        glm::vec3 newV = normV*glm::normalize(P.getVelocity() + (farPos - obstacles[idObstacle].center)*MaxDeviance);
+        newV[1]=0.0f;
+        P.setVelocity(newV);
+    }
+
+
+    if(flagParticles){
+        float normV = glm::length(P.getVelocity());
+        glm::vec3 newV = normV*glm::normalize(P.getVelocity() + (farPos - particles[idParticle].getCurrentPosition())*MaxDeviance);
+        newV[1]=0.0f;
+        P.setVelocity(newV);
+    }
 
 }
 

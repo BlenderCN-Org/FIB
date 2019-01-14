@@ -48,8 +48,6 @@ void GLWidget::createGenerator(){
     if(!pathfinding){
         G = Generator(nb_particles);
 
-        //Init particles
-        G.initBuffers();
         //Init planes
         G.plane_down.initBuffers();
         G.plane_up.initBuffers();

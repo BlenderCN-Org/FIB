@@ -21,55 +21,57 @@ class Generator
 {
 
 public:
-//    enum class UpdateMethod : std::int8_t { EulerOrig, EulerSemi, Verlet };
     Generator();
     Generator(int nb_particles);
 
+    //Vector of particles
+    std::vector<Particle> particles;
+    int nb_particles;
+    float radius=0.5f;
+    int life = 50;
     //Update all particles
     void Update(GLfloat dt);
     //Render particles
     void Display(QOpenGLShaderProgram *program, QMatrix4x4 proj, QMatrix4x4 modelView);
-    void DisplayObstacles(QOpenGLShaderProgram *program, QMatrix4x4 proj, QMatrix4x4 modelView);
-    //Init buffers for display
-    void initBuffers();
-    void loadModels(std::vector<ModelData*>& models);
-    std::vector<Particle> particles;
-    std::vector<Model*> models;
-    GLuint VAO, planeVAO;
-
-    float radius=0.5f;
-    int life = 50;
-
+    //Limit planes of the world
     Plane plane_down, plane_up, plane_right, plane_left, plane_bottom, plane_front;
-
+    GLuint VAO, planeVAO;
+    //Update method used : Euler
     Particle::UpdateMethod method = Particle::UpdateMethod::EulerOrig;
 
-    std::vector<ModelData*> modelsData;
-    std::vector<Model*> m_models;
-
-    int nb_particles;
-    std::vector<Sphere> obstacles;
-    QElapsedTimer timer;
 
     bool pathfinding = false;
+    //Add character for pathfinding
     void addPathCharacter(int x, int y);
-    void updatePath();
-
-    std::vector<int> Path;
     Particle pathParticle;
+    //Path obtained from Astar
+    std::vector<int> Path;
     int current_id=0;
-    int size_x, size_y;
+    int size_x, size_y, startx, starty;
+    //Obstacles for the pathfinding
+    std::vector<Sphere> obstacles;
+
+
+    QElapsedTimer timer;
+
 
 private:
 
     //Buffers
     GLuint particleBuffer, planeBuffer;
 
-    //Find index of a particle that is unused (already dead or not yet living)
-    int firstUnusedParticle();
-    //Respawns particle
-    void respawnParticle(Particle &particle);
+    void checkSteering(Particle &P, int id);
+    float MaxAhead = 1.0f;
+    float MaxDeviance = 0.01f;
 
+    void updatePath();
+    float updateAngle(Particle &P, float angle);
+
+    //Cal3d models
+    void loadModels(std::vector<ModelData*>& models);
+    std::vector<Model*> models;
+    std::vector<ModelData*> modelsData;
+    std::vector<Model*> m_models;
 
 };
 
