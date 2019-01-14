@@ -43,6 +43,7 @@ Generator::Generator(int nb_particles) :
     particles.clear();
     models.clear();
     obstacles.clear();
+    steeringPos.clear();
 
     // preload models
     loadModels(modelsData);
@@ -70,6 +71,12 @@ Generator::Generator(int nb_particles) :
     plane_left = Plane(glm::vec3(-10,0,0),glm::vec3(1,0,0));
     plane_front = Plane(glm::vec3(0,0,10),glm::vec3(0,0,-1));
     plane_bottom = Plane(glm::vec3(0,0,-10),glm::vec3(0,0,1));
+
+    for(int i=0; i<nb_particles; i++){
+        steeringPos.push_back(Sphere(glm::vec3(0,0.2f,0),0.2f));
+        steeringPos.push_back(Sphere(glm::vec3(0,0.2f,0),0.2f));
+    }
+
 
 
 }
@@ -246,6 +253,9 @@ void Generator::checkSteering(Particle &P, int id){
     glm::vec3 farPos = P.getCurrentPosition() + glm::normalize(P.getVelocity())*MaxAhead;
     glm::vec3 closePos = P.getCurrentPosition() + glm::normalize(P.getVelocity())*(MaxAhead/2.0f);
 
+    steeringPos[id+1].center = farPos;
+    steeringPos[id].center = closePos;
+
     bool flagParticles = false;
     bool flagObstacles = false;
     int idParticle, idObstacle;
@@ -307,6 +317,18 @@ void Generator::checkSteering(Particle &P, int id){
     }
 
 }
+
+
+
+void Generator::DisplayObstacles(QOpenGLShaderProgram *program, QMatrix4x4 proj, QMatrix4x4 modelView){
+
+//    for(int i=2; i<steeringPos.size()-1;i+=2){
+//        steeringPos[i].initBuffers();
+//        steeringPos[i].Display(program,proj,modelView);
+//    }
+}
+
+
 
 
 

@@ -48,6 +48,8 @@ public:
     int size_x;
     int size_y;
 
+    QOpenGLShaderProgram *programParticles;
+
 
 private:
 

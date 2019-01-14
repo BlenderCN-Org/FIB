@@ -23,13 +23,22 @@ pathFinding::pathFinding(int x, int y, Generator Gene)
 
     G = Gene;
 
+    programParticles = new QOpenGLShaderProgram();
+    programParticles->addShaderFromSourceFile(QOpenGLShader::Vertex, ":/shaders/particles.vert");
+    programParticles->addShaderFromSourceFile(QOpenGLShader::Fragment, ":/shaders/particles.frag");
+    programParticles->bindAttributeLocation("position", 0);
+    programParticles->bindAttributeLocation("value", 2);
+    programParticles->link();
+
 
 }
 
 
 void pathFinding::Display(QOpenGLShaderProgram *program, QMatrix4x4 proj, QMatrix4x4 modelView){
+    G.DisplayObstacles(programParticles,proj,modelView);
     grid.Display(proj,modelView);  //Display the grid
     G.Display(program,proj,modelView);  //Display the characters
+
 }
 
 
@@ -87,8 +96,10 @@ void pathFinding::aStar(){
     grid.reset();
     G.Path.clear();
 
+    //Initialize beginning & end points
     grid.map[goalx][goaly] = 3;
     grid.map[startx][starty]=2;
+    //Create obstacles
     grid.map[3][2] = 1; G.obstacles.push_back(Sphere(glm::vec3(-size_x+1.0f+2*3,0,-size_y+1.0f+2*2),1.2f));
     grid.map[7][5] = 1; G.obstacles.push_back(Sphere(glm::vec3(-size_x+1.0f+2*7,0,-size_y+1.0f+2*5),1.2f));
     grid.map[8][3] = 1; G.obstacles.push_back(Sphere(glm::vec3(-size_x+1.0f+2*8,0,-size_y+1.0f+2*3),1.2f));

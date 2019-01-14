@@ -51,6 +51,8 @@ public:
     //Obstacles for the pathfinding
     std::vector<Sphere> obstacles;
 
+    void DisplayObstacles(QOpenGLShaderProgram *program, QMatrix4x4 proj, QMatrix4x4 modelView);
+    std::vector<Sphere> steeringPos;
 
     QElapsedTimer timer;
 
@@ -61,7 +63,7 @@ private:
     GLuint particleBuffer, planeBuffer;
 
     void checkSteering(Particle &P, int id);
-    float MaxAhead = 1.0f;
+    float MaxAhead = 1.2f;
     float MaxDeviance = 0.01f;
 
     void updatePath();
