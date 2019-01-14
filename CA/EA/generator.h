@@ -50,10 +50,15 @@ public:
     int nb_particles;
     std::vector<Sphere> obstacles;
     QElapsedTimer timer;
+
     bool pathfinding = false;
-    void addPathCharacter(int x, int y, int size_x, int size_y);
+    void addPathCharacter(int x, int y);
     void updatePath();
+
+    std::vector<int> Path;
     Particle pathParticle;
+    int current_id=0;
+    int size_x, size_y;
 
 private:
 

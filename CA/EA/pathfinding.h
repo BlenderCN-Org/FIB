@@ -48,6 +48,7 @@ public:
     int size_x;
     int size_y;
 
+
 private:
 
     std::priority_queue<node> pQueue;

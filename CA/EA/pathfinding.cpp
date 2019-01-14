@@ -85,8 +85,10 @@ void testNeighbor(node* current, node* neighbor, std::priority_queue<node>* pQ){
 void pathFinding::aStar(){
     initNodes();
     grid.reset();
+    G.Path.clear();
 
     grid.map[goalx][goaly] = 3;
+    grid.map[startx][starty]=2;
     grid.map[3][2] = 1; G.obstacles.push_back(Sphere(glm::vec3(-size_x+1.0f+2*3,0,-size_y+1.0f+2*2),1.2f));
     grid.map[7][5] = 1; G.obstacles.push_back(Sphere(glm::vec3(-size_x+1.0f+2*7,0,-size_y+1.0f+2*5),1.2f));
     grid.map[8][3] = 1; G.obstacles.push_back(Sphere(glm::vec3(-size_x+1.0f+2*8,0,-size_y+1.0f+2*3),1.2f));
@@ -186,12 +188,19 @@ void pathFinding::aStar(){
         lowestNode = pQueue.top();
     }
 
-    while(lowestNode.x != startx || lowestNode.y != starty){
+    G.Path.push_back(goalx);
+    G.Path.push_back(goaly);
+
+    while(lowestNode.Parentx != startx || lowestNode.Parenty != starty){
         grid.map[lowestNode.Parentx][lowestNode.Parenty] = 2;  //Show path on the grid
+        G.Path.push_back(lowestNode.Parentx);
+        G.Path.push_back(lowestNode.Parenty);
         lowestNode = NodeList[lowestNode.Parentx][lowestNode.Parenty];
     }
 
-    G.addPathCharacter(startx,starty,size_x,size_y);
+    G.size_x = this->size_x;
+    G.size_y = this->size_y;
+    G.addPathCharacter(startx,starty);
 }
 
 

@@ -197,6 +197,8 @@ void Generator::Display(QOpenGLShaderProgram *program, QMatrix4x4 proj, QMatrix4
     }
 
     if(pathfinding){
+        updatePath();
+
         MVtemp.translate(pathParticle.getCurrentPosition().x,pathParticle.getCurrentPosition().y,pathParticle.getCurrentPosition().z);
         MVtemp.rotate(90,QVector3D(-1,0,0));
 
@@ -228,15 +230,44 @@ void Generator::DisplayObstacles(QOpenGLShaderProgram *program, QMatrix4x4 proj,
 
 
 
-void Generator::addPathCharacter(int x, int y, int size_x, int size_y){
+void Generator::addPathCharacter(int x, int y){
     pathfinding = true;
-    pathParticle=Particle(glm::vec3(-size_x+2*x+1.0f,0,-size_y+2*y+1.0f),glm::vec3(0),1.0f,false,0,glm::vec3(0));
+    pathParticle=Particle(glm::vec3(-size_x+2*x+1.0f,0,-size_y+2*y+1.0f),glm::vec3(1,0,0),1.0f,false,1.0,glm::vec3(0));
+    updatePath();
 
 }
 
 
 
 void Generator::updatePath(){
+
+    int next_x = Path[Path.size()-2*(current_id+1)];
+    int next_y = Path[Path.size()-2*(current_id+1)+1];
+
+    std::cout << "x:  " << next_x << " -  y:  " << next_y << std::endl;
+
+    glm::vec3 currentPos = pathParticle.getCurrentPosition();
+
+    glm::vec3 targetPos = glm::vec3(-size_x+2*next_x+1.0f,0,-size_y+2*next_y+1.0f);
+    float prevDist = glm::length(targetPos-currentPos);
+    pathParticle.setVelocity(glm::normalize(targetPos-currentPos));
+
+    pathParticle.updateParticle(0.01f,method);
+
+    currentPos = pathParticle.getCurrentPosition();
+    float distance = glm::length(targetPos-currentPos);
+
+    if(distance-prevDist >0)
+        std::cout << "muy mal" << std::endl;
+//    std::cout << distance << std::endl;
+    if(distance < 0.5f){
+        if(current_id < (Path.size()/2-1))
+            current_id+=1;
+        else
+            current_id=0;
+    }
+
+//    std::cout << current_id << std::endl;
 
 }
 
